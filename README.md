@@ -15,6 +15,8 @@ You send attributes to index and queries to run; PulseIndex returns matching ent
 - Zero-dependency GeoHash radius coverage (`geo:{precision}:{hash}`)
 - Connection pooling, deadlines, and `x-api-key` / `Authorization: Bearer` metadata
 - Attribute flattening so plain objects index without a schema (categories, flags, geo tags), with numbers and positions under names you choose
+- Exact radius and nearest-first ordering, measured by the engine rather than approximated by geohash rectangles
+- A count that says whether it is a count (`totalIsExact`), so a page total is never mistaken for the whole set
 
 ## Installation
 
@@ -172,7 +174,7 @@ const client = new PulseIndex({
 
 ## Indexing
 
-`index()` accepts a string/number entity id plus a flat attribute object. `numbers` and `points` carry the fields you want ranges, orders and circles on, under names you pick. A few keys are consumed rather than turned into tags (`tenantId`, `lat` / `lng`, `categories`, `numbers`, `points`); every other key becomes a namespaced term (`status:listed`, `amenities:parking`) you can filter on. Coordinates automatically add `geo:5:…` and `geo:6:…` tags.
+`index()` accepts a string/number entity id plus a flat attribute object. `numbers` and `points` carry the fields you want ranges, orders and circles on, under names you pick. These keys are consumed rather than turned into tags — `id`, `entityId`, `entity_id`, `attributes`, `numbers`, `points`, `tenantId`, `tenant_id`, `categories`, `tags`, `latitude`, `longitude`, `lat`, `lng`, `lon` — and every other key becomes a namespaced term (`status:listed`, `amenities:parking`) you can filter on. Coordinates automatically add `geo:5:…` and `geo:6:…` tags.
 
 `price` and `locationPrefix` used to be reserved this way and are not any more: the engine has no field of its own for either. A bare `price: 250000` is now the tag `price:250000`, so a range on it would find nothing — put it in `numbers`.
 
@@ -204,14 +206,17 @@ await client.batchDelete([1002, 1003, 1004]);
 Low-level PHP-compatible helper:
 
 ```ts
-await client.indexEntity(1001, ['feature:pool', 'amenity:parking'], 1500, 0, 'acme');
+await client.indexEntity(1001, ['feature:pool', 'amenity:parking'], { price: 1500 }, 'acme');
 ```
+
+It took a single `price` and a `locationPrefix` before 5.0. Both are gone: the
+third argument is now the whole `numbers` map, under your own names.
 
 `entity_id` is a proto `uint64`. Pass a string when the id may exceed `Number.MAX_SAFE_INTEGER`.
 
 ## QueryBuilder
 
-The engine evaluates MUST (AND), SHOULD (OR group, then AND), MUST_NOT, optional `price` ranges, and returns ids only. `QueryBuilder` is immutable: each chained call returns a new builder.
+The engine evaluates MUST (AND), SHOULD (OR group, then AND), MUST_NOT, numeric ranges on any field you named, an optional circle, and an optional order — and returns ids only. `QueryBuilder` is immutable: each chained call returns a new builder.
 
 ```ts
 const query = client
@@ -237,7 +242,7 @@ await client.search({
   should: ['category:villa', 'category:apartment'],
   mustNot: 'status:sold',
   ranges: [{ field: 'price', min: 100000, max: 500000 }],
-  withinRadius: { lat: 41.0082, lng: 28.9784, radiusKm: 5 },
+  withinRadius: { lat: 41.0082, lng: 28.9784, radiusKm: 5, field: 'where' },
   limit: 50,
 });
 ```
@@ -248,25 +253,35 @@ await client.search({
 | `must(attr \| attr[])` | MUST filters |
 | `should(attr \| attr[])` | SHOULD filters (OR group) |
 | `mustNot(attr \| attr[])` | MUST_NOT filters |
-| `range(field, min, max)` | Numeric range (currently `price`) |
-| `withinRadius(lat, lon, km)` / `withinRadius({ lat, lng, radiusKm })` | SHOULD geo covering |
+| `range(field, min, max)` | Inclusive range on a number you named. Whole numbers; a fraction is refused, not rounded |
+| `sortAsc(field)` / `sortDesc(field)` / `sortBy(field, desc)` | Order the page by a number you named |
+| `withinRadius({ lat, lng, radiusKm, field? })` | Geohash covering, and an exact circle when `field` is given |
+| `within(field, lat, lon, km)` | The circle alone, measured, with no covering to narrow it |
+| `nearest(field, lat, lon)` | Order by distance, nearest first |
 | `whereGeoHash(hash)` / `inGeoHash(hash)` | MUST exact geo cell |
-| `location(prefix)` | Coarse `location_prefix` |
-| `limit(n)` / `offset(n)` | Pagination (`0` = unlimited) |
+| `exactTotal()` | Count every match instead of stopping when the page fills |
+| `limit(n)` / `offset(n)` | Pagination (`0` = the count with no ids) |
 | `toRequest()` | Compile the proto-shaped payload |
 | `execute()` | Search via the bound client |
 
+`location(prefix)` is gone. It set `location_prefix`, a `uint64` bitfield the
+engine no longer has, and both SDKs had been sending `0` for it on every request.
+
 ## GeoHash usage
 
-Precision is chosen from radius, then covering cells are emitted as SHOULD `geo:{precision}:{hash}` tags:
+Precision is chosen from the radius **and the latitude**, then the covering cells are emitted as SHOULD `geo:{precision}:{hash}` tags. Only precisions 5 and 6 are ever chosen, because those are the only two `encodeMultiTags` writes at index time:
 
-| Radius | Precision | Approximate cell |
+| Radius | Precision | Cells in the covering |
 | --- | --- | --- |
-| ≤ 1.5 km | 6 | ~1.2 km × 0.6 km |
-| ≤ 8.0 km | 5 | ~4.9 km × 4.9 km |
-| > 8.0 km | 4 | ~39 km × 19 km |
+| up to ~2 km | 6 (~1.2 km × 0.6 km) | 2 – 45 |
+| ~5 km and above | 5 (~4.9 km × 4.9 km) | 9 at 5 km, 184 at 30 km, 487 at 50 km |
+| too large for 2,048 cells | — | **refused by name**, not half-covered |
 
-`GeoHash.neighborhood3x3()` returns the centre cell plus eight neighbors. `withinRadius()` uses intersecting covering cells (same algorithm as `pulseindex-php`) so oversized neighbors are not OR'd in.
+Measured at Istanbul; the same radius costs more cells the further from the equator it is asked, because a cell keeps its width in degrees and so narrows in kilometres toward the poles. A 100 km circle is answered at Riyadh and refused at Oslo.
+
+It used to return **precision 4 for anything above 8 km**, and nothing is indexed at precision 4, so every radius above 8 km matched nothing at all: measured against a real engine, 15 km returned 0 of 386 and 50 km returned 0 of 4,282. An empty page, silently. The covering was also truncated at 64 cells, so a 50 km circle came back covered 18% with no error.
+
+`GeoHash.neighborhood3x3()` returns the centre cell plus eight neighbors. `withinRadius()` uses intersecting covering cells (same algorithm as `pulseindex-php`, checked against one shared vector fixture) so oversized neighbors are not OR'd in.
 
 ```ts
 import { GeoHash } from '@pulseindex/sdk';
@@ -363,9 +378,14 @@ than failing your own requests immediately; if it persists, contact support.
 {
   matchedEntityIds: string[];
   totalMatches: number;
+  totalIsExact: boolean;   // read this before showing totalMatches
   executionTimeUs: number;
 }
 ```
+
+`totalIsExact` is computed from what the scan actually did, not from what you
+asked for: a page whose matches all fitted inside it was never cut short, so its
+count is exact either way.
 
 ## gRPC contract
 
@@ -376,6 +396,7 @@ Service: `pulseindex.engine.v1.SearchEngineService`
 | `IndexEntity` | `IndexEntityRequest` | `IndexEntityResponse` |
 | `BatchIndexEntities` | `BatchIndexEntitiesRequest` | `BatchIndexEntitiesResponse` |
 | `DeleteEntity` | `DeleteEntityRequest` | `DeleteEntityResponse` |
+| `BatchDeleteEntities` | `BatchDeleteEntitiesRequest` | `BatchDeleteEntitiesResponse` |
 | `Search` | `SearchQueryRequest` | `SearchQueryResponse` |
 
 `health()` reports whether the service is ready to answer queries. It needs no

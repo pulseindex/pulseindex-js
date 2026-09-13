@@ -195,11 +195,18 @@ export class QueryBuilder {
   /**
    * Filter on a numeric field's inclusive range.
    *
-   * `price` is the only number an entity carries. Naming any other field is
-   * refused by the engine rather than answered, because a field nothing carries
-   * can only match nothing, and an empty page looks exactly like a real one.
-   * Model any other number as a category token instead: `must('bedrooms:3')`,
-   * or several in one SHOULD group for a range of values.
+   * The field is one you named yourself in the entity's `numbers`. The engine
+   * names none of them — it carried a single `uint32` called `price` until
+   * 5.0, which was a schema it had no business holding.
+   *
+   * A range on a field no entity in your tenant carries is refused by name
+   * rather than answered, because a field nothing carries can only match
+   * nothing, and an empty page looks exactly like a real one.
+   *
+   * A fractional bound is refused rather than rounded, the same way a
+   * fractional value is at index time. Both bounds used to be floored, which
+   * is wrong in opposite directions: flooring a minimum widens the range and
+   * flooring a maximum narrows it, and neither said so.
    */
   range(field: string, min: number, max: number): QueryBuilder {
     if (!field.trim()) {
@@ -208,16 +215,24 @@ export class QueryBuilder {
     if (!Number.isFinite(min) || !Number.isFinite(max)) {
       throw new PulseIndexQueryError('Range bounds must be finite numbers.');
     }
+    for (const [name, value] of [
+      ['min', min],
+      ['max', max],
+    ] as const) {
+      if (!Number.isInteger(value)) {
+        throw new PulseIndexQueryError(
+          `Range ${name} for "${field}" is ${value}, and the engine's column is a 64-bit ` +
+            'integer. Scale it yourself — a price in cents, a rating out of 100 — rather ' +
+            'than having a bound moved for you.',
+        );
+      }
+    }
     if (min > max) {
       throw new PulseIndexQueryError(`Range min (${min}) must be <= max (${max}).`);
     }
 
     return this.fork((state) => {
-      state.ranges.push({
-        field,
-        minVal: Math.floor(min),
-        maxVal: Math.floor(max),
-      });
+      state.ranges.push({ field, minVal: min, maxVal: max });
     });
   }
 

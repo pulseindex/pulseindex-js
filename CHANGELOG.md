@@ -1,5 +1,33 @@
 # Changelog
 
+## 5.1.0
+
+### A fractional range bound is refused rather than moved
+
+`range()` floored both bounds. Flooring is wrong in opposite directions —
+a minimum of `4.3` became `4.0` and widened the range, a maximum of `4.9` became
+`4.0` and narrowed it — and neither said so, so the page came back looking
+complete. It now throws, the same way a fraction in `numbers` is refused at
+index time. Scale the number yourself: a price in cents, a rating out of 100.
+
+### The README was still describing 4.x in four places
+
+Verified against the source rather than re-read:
+
+- `indexEntity()` was documented as `(id, categories, price, locationPrefix,
+  tenant)`. It has taken `(id, categories, numbers, tenant)` since 5.0.0.
+- The QueryBuilder table listed `location(prefix)`, a method that no longer
+  exists, and described `range()` as "currently `price`".
+- The geohash precision table said **precision 4 above 8 km**. That is the bug
+  5.0.0 fixed: nothing is indexed at precision 4, so every radius above 8 km
+  matched nothing at all. The table now states the real rule, with measured
+  cell counts and the fact that a circle too large to cover is refused.
+- `SearchResponse` was missing `totalIsExact`, and the RPC table was missing
+  `BatchDeleteEntities`.
+
+`within()`, `nearest()`, `exactTotal()` and the sort methods are in the table
+now. They shipped in 5.0.0 and were never listed.
+
 ## 5.0.1
 
 ### The README was documenting 4.x

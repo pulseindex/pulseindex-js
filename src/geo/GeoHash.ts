@@ -201,11 +201,12 @@ export class GeoHash {
    * 15 km returned 0 of 386, 50 km returned 0 of 4,282 — an empty page, with
    * no error to explain it.
    *
-   * Of the indexed precisions it returns the finest whose complete covering
-   * fits {@link COVERING_CELL_BUDGET}, because a finer cell wastes less area
-   * outside the circle. Measured at Riyadh: 5 km takes 140 cells at precision
-   * 6 for 1.21x the circle, against 10 cells at precision 5 for 2.76x; 15 km
-   * needs 1,120 at precision 6 and so falls to 47 at precision 5 for 1.44x.
+   * Of the indexed precisions it returns the **coarsest** whose complete
+   * covering both fits {@link COVERING_CELL_BUDGET} and is tight enough
+   * ({@link ACCEPTABLE_COVER_RATIO}), falling back to the finest that fits at
+   * all. Measured at Riyadh: 15 km needs 1,120 cells at precision 6 to cover
+   * 1.07x the circle where precision 5 costs 47 for 1.44x, so the finer cell
+   * buys a quarter off an already-small excess for 24 times the predicates.
    *
    * Latitude is a parameter because it changes the answer: a cell keeps its
    * width in degrees, so it narrows in kilometres toward the poles and the same

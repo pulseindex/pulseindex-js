@@ -258,6 +258,24 @@ describe('QueryBuilder', () => {
     expect(withoutField.filters.length).toBe(request.filters.length);
   });
 
+  // Both bounds used to be floored. Flooring a minimum widens the range and
+  // flooring a maximum narrows it, so the same silent rounding was wrong in
+  // opposite directions, and the answer came back looking complete either way.
+  it('refuses a fractional bound rather than moving it', () => {
+    expect(() => PulseIndex.query().range('rating', 4.3, 5)).toThrow(PulseIndexQueryError);
+    expect(() => PulseIndex.query().range('rating', 4, 4.9)).toThrow(PulseIndexQueryError);
+    expect(PulseIndex.query().range('price', 1000, 5000).toArray().ranges).toEqual([
+      { field: 'price', minVal: 1000, maxVal: 5000 },
+    ]);
+  });
+
+  // A negative bound was unreachable while the column was a uint32.
+  it('carries a negative bound, because the column is signed', () => {
+    expect(PulseIndex.query().range('delta', -500, -1).toArray().ranges).toEqual([
+      { field: 'delta', minVal: -500, maxVal: -1 },
+    ]);
+  });
+
   it('refuses a circle it cannot measure', () => {
     expect(() => PulseIndex.query().within('', 41, 29, 1)).toThrow();
     expect(() => PulseIndex.query().within('where', Number.NaN, 29, 1)).toThrow();
