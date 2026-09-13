@@ -254,6 +254,61 @@ describe('PulseIndex client integration', () => {
     );
   });
 
+  // A position in `points` is the shape both READMEs lead with, and the one
+  // that makes a radius exact. Only the top-level lat/lng pair used to emit
+  // covering tags, so such a record was indexed with no geo tag at all and
+  // withinRadius() — a SHOULD over those tags — matched nothing. An empty
+  // page, silently: §7.15's family exactly. Verified against a live engine
+  // with 216 positioned records, where within() found the 108 inside the
+  // circle and withinRadius() found 0.
+  it('tags a position given as points, not only as lat/lng', () => {
+    const encoded = encodeEntity('1001', {
+      categories: ['status:available'],
+      points: { where: { lat: 41.0082, lon: 28.9784 } },
+    });
+
+    for (const tag of GeoHash.encodeMultiTags(41.0082, 28.9784)) {
+      expect(encoded.categories).toContain(tag);
+    }
+    expect(encoded.points).toEqual({ where: { lat: 41.0082, lon: 28.9784 } });
+  });
+
+  it('tags every position a record carries', () => {
+    const encoded = encodeEntity('1002', {
+      points: {
+        pickup: { lat: 41.0082, lon: 28.9784 },
+        dropoff: { lat: 24.7136, lon: 46.6753 },
+      },
+    });
+
+    for (const [lat, lon] of [
+      [41.0082, 28.9784],
+      [24.7136, 46.6753],
+    ] as const) {
+      for (const tag of GeoHash.encodeMultiTags(lat, lon)) {
+        expect(encoded.categories).toContain(tag);
+      }
+    }
+  });
+
+  // A duplicate posting is a duplicate id in the answer.
+  it('does not tag the same position twice when it arrives in both shapes', () => {
+    const encoded = encodeEntity('1003', {
+      points: { where: { lat: 42.6, lon: -5.6 } },
+      lat: 42.6,
+      lng: -5.6,
+    });
+
+    expect(encoded.categories).toEqual([...new Set(encoded.categories)]);
+    expect(encoded.categories.sort()).toEqual(GeoHash.encodeMultiTags(42.6, -5.6).sort());
+  });
+
+  it('gives a record with no position no geo tag', () => {
+    const encoded = encodeEntity('1004', { categories: ['status:available'] });
+
+    expect(encoded.categories).toEqual(['status:available']);
+  });
+
   it('sends search and index RPCs over a mocked gRPC engine', async () => {
     const engine = await startMockEngine({ searchIds: ['1001', '1003'] });
     engines.push(engine);

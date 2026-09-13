@@ -116,17 +116,24 @@ export class PulseIndexClient implements QueryExecutor {
    * `numbers` are yours to name: `{price_cents: 45000, bedrooms: 3}`. This
    * used to take a single `price` and a `locationPrefix`, which was a schema
    * this SDK had no business imposing.
+   *
+   * The parameters are the PHP client's, in its order, because that is the
+   * only thing this helper is for — `index()` is the ergonomic call here.
+   * `points` was missing and the two drifted apart while the doc comment on
+   * both still said they matched.
    */
   async indexEntity(
     entityId: EntityId,
     categories: string[] = [],
     numbers: Record<string, number> = {},
+    points: Record<string, { lat: number; lon: number }> = {},
     tenantId = '',
   ): Promise<boolean> {
     const response = await this.index({
       entityId,
       categories,
       numbers,
+      points,
       tenantId: tenantId || this.connection.tenantId,
     });
     return response.success;

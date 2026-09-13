@@ -63,14 +63,11 @@ await client.index('1001', {
   // engine calls `price`.
   numbers: { price: 250000, bedrooms: 3 },
 
-  // A position, in degrees. The engine packs it, so a radius is measured
-  // rather than approximated.
+  // A position, in degrees, under a name you pick. The engine packs it, so a
+  // radius is measured rather than approximated — and the SDK adds the
+  // geo:5 / geo:6 tags that narrow which part of the index a radius search
+  // opens. You send the position once.
   points: { where: { lat: 41.0082, lon: 28.9784 } },
-
-  // Still read, and still what generates the geo:5 / geo:6 tags that narrow
-  // which part of the index a radius search opens.
-  lat: 41.0082,
-  lng: 28.9784,
 });
 
 const result = await client.search(
@@ -127,11 +124,21 @@ const { matchedEntityIds, totalMatches } = await client.searchWithTotal(
 );
 ```
 
-Index-time geo tags should use the same dual precision as radius queries:
+### You send a position once
+
+Every position in `points` is tagged at precisions 5 and 6 as it is indexed, and
+a radius query covers at one of those two. Both come from `GeoHash`, so the two
+sides cannot drift apart.
+
+A top-level `lat` / `lng` pair is still read, for records that carry a position
+that way, and a position given in both shapes is tagged once rather than twice.
+Before 6.0.0 only that pair emitted tags, so a record carrying its position in
+`points` — the shape that makes a radius exact — was indexed with no geo tag at
+all, and `withinRadius` matched nothing.
 
 ```ts
 const tags = GeoHash.encodeMultiTags(41.0082, 28.9784);
-// ['geo:5:sxk97', 'geo:6:sxk976'] (example)
+// ['geo:5:sxk97', 'geo:6:sxk973']
 ```
 
 ## gRPC configuration
@@ -174,7 +181,7 @@ const client = new PulseIndex({
 
 ## Indexing
 
-`index()` accepts a string/number entity id plus a flat attribute object. `numbers` and `points` carry the fields you want ranges, orders and circles on, under names you pick. These keys are consumed rather than turned into tags — `id`, `entityId`, `entity_id`, `attributes`, `numbers`, `points`, `tenantId`, `tenant_id`, `categories`, `tags`, `latitude`, `longitude`, `lat`, `lng`, `lon` — and every other key becomes a namespaced term (`status:listed`, `amenities:parking`) you can filter on. Coordinates automatically add `geo:5:…` and `geo:6:…` tags.
+`index()` accepts a string/number entity id plus a flat attribute object. `numbers` and `points` carry the fields you want ranges, orders and circles on, under names you pick. These keys are consumed rather than turned into tags — `id`, `entityId`, `entity_id`, `attributes`, `numbers`, `points`, `tenantId`, `tenant_id`, `categories`, `tags`, `latitude`, `longitude`, `lat`, `lng`, `lon` — and every other key becomes a namespaced term (`status:listed`, `amenities:parking`) you can filter on. Every position — in `points`, or as a top-level `lat` / `lng` pair — automatically adds its `geo:5:…` and `geo:6:…` tags.
 
 `price` and `locationPrefix` used to be reserved this way and are not any more: the engine has no field of its own for either. A bare `price: 250000` is now the tag `price:250000`, so a range on it would find nothing — put it in `numbers`.
 
@@ -187,8 +194,6 @@ await client.index('1001', {
   furnished: true,
   numbers: { price: 1500 },
   points: { where: { lat: 24.7136, lon: 46.6753 } },
-  lat: 24.7136,
-  lng: 46.6753,
 });
 
 await client.batchIndex([
@@ -206,11 +211,19 @@ await client.batchDelete([1002, 1003, 1004]);
 Low-level PHP-compatible helper:
 
 ```ts
-await client.indexEntity(1001, ['feature:pool', 'amenity:parking'], { price: 1500 }, 'acme');
+await client.indexEntity(
+  1001,
+  ['feature:pool', 'amenity:parking'],
+  { price: 1500 },
+  { where: { lat: 24.7136, lon: 46.6753 } },
+  'acme',
+);
 ```
 
 It took a single `price` and a `locationPrefix` before 5.0. Both are gone: the
-third argument is now the whole `numbers` map, under your own names.
+third argument is the whole `numbers` map and the fourth is `points`, under
+names you pick. The parameters are `pulseindex-php`'s, in its order, which is
+the only reason this helper exists — `index()` is the ergonomic call here.
 
 `entity_id` is a proto `uint64`. Pass a string when the id may exceed `Number.MAX_SAFE_INTEGER`.
 

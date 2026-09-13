@@ -170,7 +170,10 @@ function pushScalarTag(target: string[], value: unknown): void {
   }
 }
 
-function flattenAttributes(attributes: Record<string, unknown>): string[] {
+function flattenAttributes(
+  attributes: Record<string, unknown>,
+  points: Record<string, GeoPoint>,
+): string[] {
   const categories: string[] = [];
 
   for (const listKey of ['categories', 'tags'] as const) {
@@ -217,12 +220,26 @@ function flattenAttributes(attributes: Record<string, unknown>): string[] {
     }
   }
 
+  // Every position gets its covering tags, whichever way it arrived.
+  //
+  // Only the top-level `lat`/`lng` pair used to do this, so a record carrying
+  // its position in `points` — the shape that makes a radius exact, and the
+  // one both READMEs lead with — was indexed with no geo tag at all.
+  // `withinRadius` is a SHOULD over those tags, so it matched nothing: an
+  // empty page, silently, which is §7.15's family exactly. Sending the same
+  // position twice in two shapes was never a contract anyone agreed to.
+  for (const point of Object.values(points)) {
+    categories.push(...GeoHash.encodeMultiTags(point.lat, point.lon));
+  }
+
   const lat = firstNumber(attributes, ['latitude', 'lat']);
   const lon = firstNumber(attributes, ['longitude', 'lng', 'lon']);
   if (lat !== undefined && lon !== undefined) {
     categories.push(...GeoHash.encodeMultiTags(lat, lon));
   }
 
+  // A record with a position in both shapes would otherwise carry the tag
+  // twice, and a duplicate posting is a duplicate id in the answer.
   return [...new Set(categories)];
 }
 
@@ -282,11 +299,13 @@ export function encodeEntity(
   const tenantId =
     firstString(merged, ['tenantId', 'tenant_id']) ?? defaults.tenantId ?? '';
 
+  const points = collectPoints(merged);
+
   return {
     entityId: toUint64String(rawId as EntityId, 'entityId'),
-    categories: flattenAttributes(merged),
+    categories: flattenAttributes(merged, points),
     numbers: collectNumbers(merged),
-    points: collectPoints(merged),
+    points,
     tenantId,
   };
 }

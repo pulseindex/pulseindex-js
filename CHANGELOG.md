@@ -1,27 +1,53 @@
 # Changelog
 
-## 5.1.0
+## 6.0.0
 
-### A fractional range bound is refused rather than moved
+Engine unchanged: this still needs v2.0.0 or later, and nothing on the wire
+moved. The major is for two signatures, below.
 
-`range()` floored both bounds. Flooring is wrong in opposite directions —
-a minimum of `4.3` became `4.0` and widened the range, a maximum of `4.9` became
+### A position given as `points` is indexed with no geo tag — fixed
+
+`points` is the shape this README leads with, and the shape that makes a radius
+exact. Only a top-level `lat` / `lng` pair emitted the `geo:5` / `geo:6` covering
+tags, and `withinRadius` is a SHOULD over exactly those tags — so a record
+indexed the documented way matched **nothing**. Verified against a live engine
+with 216 positioned records: `within('where', ...)` found the 108 inside the
+circle and `withinRadius({ ..., field: 'where' })` found **0**, neither with an
+error. An empty page, silently, which is the family this SDK has now produced
+four times.
+
+Every position in `points` is tagged now, each one of several, and a position
+sent in both shapes is tagged once rather than twice. You do not send a position
+twice in two shapes any more; the READMEs stop telling you to.
+
+### `indexEntity()` takes `points` — **breaking**
+
+It is documented as the PHP client's signature in the PHP client's order, and it
+was not: PHP takes `(id, categories, numbers, points, tenantId)` and this took
+`(id, categories, numbers, tenantId)`. A fourth positional argument that was a
+tenant is now a points map. `index()` is unaffected and is the call to prefer.
+
+### A fractional range bound is refused rather than moved — **breaking**
+
+`range()` floored both bounds. Flooring is wrong in opposite directions — a
+minimum of `4.3` became `4.0` and widened the range, a maximum of `4.9` became
 `4.0` and narrowed it — and neither said so, so the page came back looking
-complete. It now throws, the same way a fraction in `numbers` is refused at
-index time. Scale the number yourself: a price in cents, a rating out of 100.
+complete. It throws now, the same way a fraction in `numbers` is refused at index
+time. Scale the number yourself: a price in cents, a rating out of 100.
 
 ### The README was still describing 4.x in four places
 
 Verified against the source rather than re-read:
 
 - `indexEntity()` was documented as `(id, categories, price, locationPrefix,
-  tenant)`. It has taken `(id, categories, numbers, tenant)` since 5.0.0.
+  tenant)`. Three releases out of date, and the signature above fixes the rest.
 - The QueryBuilder table listed `location(prefix)`, a method that no longer
   exists, and described `range()` as "currently `price`".
 - The geohash precision table said **precision 4 above 8 km**. That is the bug
   5.0.0 fixed: nothing is indexed at precision 4, so every radius above 8 km
   matched nothing at all. The table now states the real rule, with measured
-  cell counts and the fact that a circle too large to cover is refused.
+  cell counts, and says a circle too large to cover is refused rather than
+  half-covered.
 - `SearchResponse` was missing `totalIsExact`, and the RPC table was missing
   `BatchDeleteEntities`.
 
