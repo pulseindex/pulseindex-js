@@ -1,5 +1,22 @@
 # Changelog
 
+## 6.0.1
+
+No code change. `repository.url` names the `pulseindex` organisation, which is
+where this repository now lives.
+
+It matters for two reasons that pull in opposite directions and are both
+satisfied for the first time here. npm provenance refuses a publish whose
+`package.json` does not name the repository the workflow ran in. And the
+engine's disclosure guard refuses a published archive containing the old
+owner's personal account name, which that field was the only place it appeared
+in — so the guard had failed every run since 2026-09-07, including the one that
+published 6.0.0.
+
+Versions up to 6.0.0 keep naming the old account in their signed attestations.
+Those are immutable, in a public transparency log. This is the first release
+where the shipped package and the attestation both name the organisation.
+
 ## 6.0.0
 
 Engine unchanged: this still needs v2.0.0 or later, and nothing on the wire
