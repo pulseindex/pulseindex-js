@@ -64,7 +64,7 @@ export function toUint64String(value: EntityId, field = 'entityId'): string {
  *
  * The engine's column is a 64-bit integer. This used to be a 32-bit unsigned
  * one that floored whatever it was given, so `4.3` was sent as `4`, `0.5` as
- * `0` and `199.99` as `199` — silently, which is the worst way to lose a
+ * `0` and `199.99` as `199`: silently, which is the worst way to lose a
  * value. A fraction is refused now, with the scaling it needs named, because
  * `4.3` is only ever a lie once it has been stored as `4`.
  */
@@ -76,7 +76,7 @@ export function toFieldValue(value: unknown, field: string): number {
   if (!Number.isInteger(numeric)) {
     throw new PulseIndexQueryError(
       `${field} is ${numeric}, and the engine stores whole numbers. Scale it to an ` +
-        `integer and keep the scale on your side — a price in cents, a rating out of 100.`,
+        `integer and keep the scale on your side, a price in cents, a rating out of 100.`,
     );
   }
   if (!Number.isSafeInteger(numeric)) {
@@ -223,8 +223,8 @@ function flattenAttributes(
   // Every position gets its covering tags, whichever way it arrived.
   //
   // Only the top-level `lat`/`lng` pair used to do this, so a record carrying
-  // its position in `points` — the shape that makes a radius exact, and the
-  // one both READMEs lead with — was indexed with no geo tag at all.
+  // its position in `points`: the shape that makes a radius exact, and the
+  // one both READMEs lead with, was indexed with no geo tag at all.
   // `withinRadius` is a SHOULD over those tags, so it matched nothing: an
   // empty page, silently, which is §7.15's family exactly. Sending the same
   // position twice in two shapes was never a contract anyone agreed to.

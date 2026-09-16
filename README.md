@@ -1,8 +1,8 @@
 # PulseIndex JavaScript / TypeScript SDK
 
-Official Node.js & TypeScript client for **PulseIndex** — hosted search and filtering for large entity sets.
+Official Node.js & TypeScript client for **PulseIndex**: hosted search and filtering for large entity sets.
 
-You send attributes to index and queries to run; PulseIndex returns matching entity IDs, which you hydrate from your own database. Your records stay in your primary store — the service holds only what it needs to answer queries.
+You send attributes to index and queries to run; PulseIndex returns matching entity IDs, which you hydrate from your own database. Your records stay in your primary store. The service holds only what it needs to answer queries.
 
 [![npm version](https://img.shields.io/npm/v/@pulseindex/sdk.svg)](https://www.npmjs.com/package/@pulseindex/sdk)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](#installation)
@@ -64,7 +64,7 @@ await client.index('1001', {
   numbers: { price: 250000, bedrooms: 3 },
 
   // A position, in degrees, under a name you pick. The engine packs it, so a
-  // radius is measured rather than approximated — and the SDK adds the
+  // radius is measured rather than approximated, and the SDK adds the
   // geo:5 / geo:6 tags that narrow which part of the index a radius search
   // opens. You send the position once.
   points: { where: { lat: 41.0082, lon: 28.9784 } },
@@ -92,7 +92,7 @@ the cells alone cover more than the circle does. Measured against a million
 records with PostgreSQL computing the same circle, a 5 km search returned **44
 rows where 22 were really inside**.
 
-Pass `field` — the name you indexed the position under — and the engine narrows
+Pass `field`, the name you indexed the position under, and the engine narrows
 on those cells and then measures the true distance. Same query, **22 rows**, and
 it agreed with both PostgreSQL and Typesense on the id set. Leave `field` out and
 the cells are the whole answer, which is the 4.x behaviour.
@@ -133,7 +133,7 @@ sides cannot drift apart.
 A top-level `lat` / `lng` pair is still read, for records that carry a position
 that way, and a position given in both shapes is tagged once rather than twice.
 Before 6.0.0 only that pair emitted tags, so a record carrying its position in
-`points` — the shape that makes a radius exact — was indexed with no geo tag at
+`points`, the shape that makes a radius exact, was indexed with no geo tag at
 all, and `withinRadius` matched nothing.
 
 ```ts
@@ -156,17 +156,17 @@ const client = PulseIndex.create(
 | Option | Env var | Default | Description |
 | --- | --- | --- | --- |
 | `endpoint` / `host` | `PULSEINDEX_ENDPOINT`, `PULSEINDEX_HOST` | `localhost:50051` | Engine `host:port` |
-| `apiKey` | `PULSEINDEX_API_KEY` | — | Sent as `x-api-key` and `Authorization: Bearer` |
-| `authorization` | `PULSEINDEX_AUTHORIZATION` | — | Overrides the Bearer token when set |
+| `apiKey` | `PULSEINDEX_API_KEY` | - | Sent as `x-api-key` and `Authorization: Bearer` |
+| `authorization` | `PULSEINDEX_AUTHORIZATION` | - | Overrides the Bearer token when set |
 | `tenantId` | `PULSEINDEX_TENANT_ID` | `''` (engine uses `default`) | Default tenant for index / search / delete |
-| `timeoutMs` | — | `5000` | Per-RPC deadline |
+| `timeoutMs` | - | `5000` | Per-RPC deadline |
 | `ssl` | `PULSEINDEX_SSL` | `false` | Enable TLS |
-| `rootCerts` / `privateKey` / `certChain` | — | — | Optional custom TLS materials |
-| `poolSize` | — | `1` | Number of multiplexed gRPC clients |
-| `protoPath` | — | packaged `proto/engine.proto` | Override the proto file |
-| `channelOptions` | — | keepalive defaults | Extra `@grpc/grpc-js` channel options |
+| `rootCerts` / `privateKey` / `certChain` | - | - | Optional custom TLS materials |
+| `poolSize` | - | `1` | Number of multiplexed gRPC clients |
+| `protoPath` | - | packaged `proto/engine.proto` | Override the proto file |
+| `channelOptions` | - | keepalive defaults | Extra `@grpc/grpc-js` channel options |
 
-The client sends your key as `x-api-key`, and also as `Authorization: Bearer` — either is accepted. Every indexing and query call carries `tenant_id`; an empty value means `"default"`.
+The client sends your key as `x-api-key`, and also as `Authorization: Bearer`. Either is accepted. Every indexing and query call carries `tenant_id`; an empty value means `"default"`.
 
 ```ts
 const client = new PulseIndex({
@@ -181,9 +181,9 @@ const client = new PulseIndex({
 
 ## Indexing
 
-`index()` accepts a string/number entity id plus a flat attribute object. `numbers` and `points` carry the fields you want ranges, orders and circles on, under names you pick. These keys are consumed rather than turned into tags — `id`, `entityId`, `entity_id`, `attributes`, `numbers`, `points`, `tenantId`, `tenant_id`, `categories`, `tags`, `latitude`, `longitude`, `lat`, `lng`, `lon` — and every other key becomes a namespaced term (`status:listed`, `amenities:parking`) you can filter on. Every position — in `points`, or as a top-level `lat` / `lng` pair — automatically adds its `geo:5:…` and `geo:6:…` tags.
+`index()` accepts a string/number entity id plus a flat attribute object. `numbers` and `points` carry the fields you want ranges, orders and circles on, under names you pick. These keys are consumed rather than turned into tags: `id`, `entityId`, `entity_id`, `attributes`, `numbers`, `points`, `tenantId`, `tenant_id`, `categories`, `tags`, `latitude`, `longitude`, `lat`, `lng`, `lon`. Every other key becomes a namespaced term (`status:listed`, `amenities:parking`) you can filter on. Every position, whether in `points` or as a top-level `lat` / `lng` pair, automatically adds its `geo:5:…` and `geo:6:…` tags.
 
-`price` and `locationPrefix` used to be reserved this way and are not any more: the engine has no field of its own for either. A bare `price: 250000` is now the tag `price:250000`, so a range on it would find nothing — put it in `numbers`.
+`price` and `locationPrefix` used to be reserved this way and are not any more: the engine has no field of its own for either. A bare `price: 250000` is now the tag `price:250000`, so a range on it would find nothing. Put it in `numbers`.
 
 A fraction in `numbers` is refused rather than rounded. The engine's column is a 64-bit integer, and `4.3` used to be sent as `4` without a word. Scale it yourself: a price in cents, a rating out of 100.
 
@@ -223,13 +223,13 @@ await client.indexEntity(
 It took a single `price` and a `locationPrefix` before 5.0. Both are gone: the
 third argument is the whole `numbers` map and the fourth is `points`, under
 names you pick. The parameters are `pulseindex-php`'s, in its order, which is
-the only reason this helper exists — `index()` is the ergonomic call here.
+the only reason this helper exists. `index()` is the ergonomic call here.
 
 `entity_id` is a proto `uint64`. Pass a string when the id may exceed `Number.MAX_SAFE_INTEGER`.
 
 ## QueryBuilder
 
-The engine evaluates MUST (AND), SHOULD (OR group, then AND), MUST_NOT, numeric ranges on any field you named, an optional circle, and an optional order — and returns ids only. `QueryBuilder` is immutable: each chained call returns a new builder.
+The engine evaluates MUST (AND), SHOULD (OR group, then AND), MUST_NOT, numeric ranges on any field you named, an optional circle, and an optional order, and returns ids only. `QueryBuilder` is immutable: each chained call returns a new builder.
 
 ```ts
 const query = client
@@ -288,7 +288,7 @@ Precision is chosen from the radius **and the latitude**, then the covering cell
 | --- | --- | --- |
 | up to ~2 km | 6 (~1.2 km × 0.6 km) | 2 – 45 |
 | ~5 km and above | 5 (~4.9 km × 4.9 km) | 9 at 5 km, 184 at 30 km, 487 at 50 km |
-| too large for 2,048 cells | — | **refused by name**, not half-covered |
+| too large for 2,048 cells | - | **refused by name**, not half-covered |
 
 Measured at Istanbul; the same radius costs more cells the further from the equator it is asked, because a cell keeps its width in degrees and so narrows in kilometres toward the poles. A 100 km circle is answered at Riyadh and refused at Oslo.
 
@@ -323,11 +323,11 @@ try {
   await client.search(PulseIndex.query().must('feature:pool').limit(20));
 } catch (error) {
   if (error instanceof PulseIndexAuthError) {
-    // UNAUTHENTICATED / PERMISSION_DENIED — check x-api-key
+    // UNAUTHENTICATED / PERMISSION_DENIED: check x-api-key
   } else if (error instanceof PulseIndexConnectionError) {
-    // UNAVAILABLE / DEADLINE_EXCEEDED — engine down or timeout
+    // UNAVAILABLE / DEADLINE_EXCEEDED: engine down or timeout
   } else if (error instanceof PulseIndexQueryError) {
-    // INVALID_ARGUMENT / RESOURCE_EXHAUSTED — bad query or capacity
+    // INVALID_ARGUMENT / RESOURCE_EXHAUSTED: bad query or capacity
   } else {
     throw error;
   }
@@ -361,7 +361,7 @@ status === SERVING_STATUS.SERVING;       // ready for queries
 status === SERVING_STATUS.NOT_SERVING;   // reachable, not currently serving
 ```
 
-`health()` needs no particular scope on your API key — it does not send one.
+`health()` needs no particular scope on your API key. It does not send one.
 
 If `health()` stays `false` for more than a few minutes, retry with backoff rather
 than failing your own requests immediately; if it persists, contact support.

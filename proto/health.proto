@@ -1,6 +1,6 @@
 // The standard gRPC health checking protocol, as served by the engine.
 //
-// This is a verbatim subset of grpc/health/v1/health.proto — only `Check` is
+// This is a verbatim subset of grpc/health/v1/health.proto, only `Check` is
 // used, so the streaming `Watch` RPC is omitted. It is vendored rather than
 // pulled from a package because it is a frozen protocol: it has not changed
 // since 2017, and a dependency for eleven lines is not worth the supply chain.

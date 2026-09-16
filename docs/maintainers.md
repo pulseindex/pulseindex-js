@@ -1,6 +1,6 @@
 # Maintainer notes
 
-Not shipped in the npm package — `files` in package.json excludes this directory
+Not shipped in the npm package, `files` in package.json excludes this directory
 on purpose. Everything here describes how the SDK is built and released, which
 is of no use to someone installing it and says more about the service than a
 consumer needs to know.
@@ -11,8 +11,8 @@ consumer needs to know.
 
 | command | catches | runs in CI |
 | --- | --- | --- |
-| `npm test` (`tests/ProtoSchema.test.ts`) | any change to the vendored schema — field added, removed, renamed, renumbered, retyped, or an RPC changed | yes |
-| `npm run check:proto` | the **engine** moving ahead of this copy | no — the engine is a separate private repository |
+| `npm test` (`tests/ProtoSchema.test.ts`) | any change to the vendored schema, field added, removed, renamed, renumbered, retyped, or an RPC changed | yes |
+| `npm run check:proto` | the **engine** moving ahead of this copy | no, the engine is a separate private repository |
 
 `check:proto` finds the engine at `$PULSEINDEX_PROTO` or a sibling checkout and
 skips (exit 0) when neither is present, so run it locally with the engine checked
@@ -20,7 +20,7 @@ out beside this repository before syncing the proto. It reports schema differenc
 semantically, and treats a comment-only difference as a warning rather than an error.
 
 The client reads response fields by name with `?? default` fallbacks, so a field the
-engine renames or removes is **silent at runtime** — the fallback simply wins. That
+engine renames or removes is **silent at runtime**: the fallback simply wins. That
 is why the schema fixture is asserted in full rather than spot-checked.
 
 

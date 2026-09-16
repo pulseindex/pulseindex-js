@@ -1,4 +1,4 @@
-# `health()` Contract — Design Decision Record
+# `health()` Contract: Design Decision Record
 
 > **Status:** design only. No code change yet.
 > Scope: `pulseindex-js` (`@pulseindex/sdk`). Written against engine `4b11c0e`.
@@ -30,14 +30,14 @@ After a total snapshot loss the engine enters degraded recovery
 | surface | while degraded |
 |---|---|
 | `Search` | **`UNAVAILABLE`** |
-| `GetRecoveryState` | **allowed** — it is the detection mechanism |
+| `GetRecoveryState` | **allowed**: it is the detection mechanism |
 | `GET /ready` | 503 |
 | `GET /health` | 200 (process is fine) |
 
 So during a real outage of the search path, `GetRecoveryState` succeeds and
 `health()` returns `true`. **A monitor built on this SDK reports healthy while every
 search returns `UNAVAILABLE`, and keeps reporting healthy for as long as the
-degraded state lasts** — which persists across restarts, because the flag lives in
+degraded state lasts**, which persists across restarts, because the flag lives in
 the snapshot header. This is the failure mode monitoring exists to catch.
 
 `README.md:274` documents the current behaviour honestly ("Channel ready +
@@ -71,7 +71,7 @@ as two commits. They are separable in review, not in dependency order.
 
 Low risk: the SDK loads the `.proto` at runtime through `@grpc/proto-loader`
 (`src/grpc/loadProto.ts`), so adding a field is a text change with no codegen step.
-Adding field 5 is wire-compatible in both directions — an older engine simply omits
+Adding field 5 is wire-compatible in both directions, an older engine simply omits
 it and `defaults: true` yields `false`.
 
 ## 3. Proposed contract
@@ -82,7 +82,7 @@ Concretely: channel ready **and** `GetRecoveryState` succeeds **and**
 `needsFullReindex === false`.
 
 - `RecoveryState` gains `needsFullReindex: boolean`, mirroring the proto field. This
-  is the only new state, and the proto supports it — no invented conditions.
+  is the only new state, and the proto supports it, no invented conditions.
 - `health()` stays `Promise<boolean>`. Callers that need to distinguish *unreachable*
   from *degraded* call `getRecoveryState()`, which now carries the flag.
 - Auth staleness (engine `/ready` 503 after the 6 h TTL) is **not** covered: it
@@ -108,23 +108,23 @@ option and assert:
    `getRecoveryState()` reports the flag
 3. unreachable engine -> `health() === false` (existing behaviour preserved)
 4. an engine that omits field 5 entirely (older engine) -> `needsFullReindex ===
-   false`, `health() === true` — the wire-compatibility case
+   false`, `health() === true`: the wire-compatibility case
 
 Test 2 must fail against the current implementation; if it passes before the fix, it
 is not testing the defect.
 
 ## 6. Decisions required from the owner
 
-**6.1 — Confirm the contract in §3:** `health()` false when degraded. The alternative
+**6.1. Confirm the contract in §3:** `health()` false when degraded. The alternative
 is leaving `health()` as a liveness probe and documenting loudly that callers must
 check `needsFullReindex` themselves. That keeps compatibility but preserves a
 foot-gun whose only victim is whoever is not reading the docs during an incident.
 
-**6.2 — Version:** `1.0.1` (patch — restores intended behaviour) or `1.1.0` (minor —
+**6.2, Version:** `1.0.1` (patch, restores intended behaviour) or `1.1.0` (minor,
 new `RecoveryState` field plus a behaviour change). The new field alone argues for
 minor; the behaviour change arguably argues for major under strict semver.
 
-**6.3 — Is the `README.md` health table part of this commit or the proto commit?**
+**6.3. Is the `README.md` health table part of this commit or the proto commit?**
 It documents both.
 
 ## 7. Explicitly out of scope
@@ -132,8 +132,8 @@ It documents both.
 Agreed with the owner, kept out so a confirmed bug fix is not diluted by optional
 improvements:
 
-- **Retry / backoff** in the JS client — acceptable to omit in a raw client library;
+- **Retry / backoff** in the JS client, acceptable to omit in a raw client library;
   to be *documented* as the caller's responsibility, as separate work.
-- **`check:proto` drift guard** — separate work, after this.
-- **Geo** (`withinRadius`, `GeoHash`) — out of scope permanently per decision D6.
-- **`ListEntityIds`** — engine-side nice-to-have, unrelated.
+- **`check:proto` drift guard**: separate work, after this.
+- **Geo** (`withinRadius`, `GeoHash`), out of scope permanently per decision D6.
+- **`ListEntityIds`**: engine-side nice-to-have, unrelated.

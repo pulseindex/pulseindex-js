@@ -56,7 +56,7 @@ describe('GeoHash', () => {
   // This used to return 4 above 8 km, and nothing is indexed at 4, so every
   // radius over 8 km matched nothing whatsoever. Measured against a real engine
   // with entities tagged by encodeMultiTags: 15 km returned 0 of 386, 50 km
-  // returned 0 of 4,282 — an empty page, with no error to explain it.
+  // returned 0 of 4,282, an empty page, with no error to explain it.
   it('only ever picks a precision the index carries', () => {
     for (const radius of [0, 0.5, 1, 1.5, 2, 5, 8, 8.01, 10, 15, 25, 40, 50]) {
       expect(GeoHash.INDEX_PRECISIONS as readonly number[]).toContain(
@@ -108,7 +108,7 @@ describe('GeoHash', () => {
   });
 
   // The budget was first set at one latitude and refused a 50 km search
-  // anywhere above 60 degrees — Oslo, Stockholm, Helsinki, Saint Petersburg.
+  // anywhere above 60 degrees. Oslo, Stockholm, Helsinki, Saint Petersburg.
   it('covers 50 km where Europeans live', () => {
     for (const [lat, lon] of [[59.9139, 10.7522], [59.3293, 18.0686], [60.1699, 24.9384], [69.6492, 18.9553]]) {
       const cells = GeoHash.getCoveringHashes(lat, lon, 50);

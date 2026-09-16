@@ -19,7 +19,7 @@ export class GeoHash {
    * indexed precision, measured: 50 km costs 376 at the equator, 592 at London,
    * 720 at Oslo, 1,044 at Tromso, 2,028 at 80N. A first attempt used 512,
    * chosen at one latitude, and it refused a 50 km search anywhere above 60
-   * degrees — Oslo, Stockholm, Helsinki, Saint Petersburg.
+   * degrees. Oslo, Stockholm, Helsinki, Saint Petersburg.
    *
    * The cost is bounded: measured against a live engine, a covering costs about
    * 0.57 us per cell, so a query at the full budget spends roughly 1.2 ms in
@@ -37,7 +37,7 @@ export class GeoHash {
    * 2.0 was the first attempt and it was too strict. It rejected the coarse
    * cell at 5 km, so a covering that had cost 10 cells cost 167, and the demo
    * benchmark went from beating PostgreSQL to losing to it by 2.76x on wall
-   * time — the cost is the request, not the search. 3.0 keeps the cheap
+   * time, the cost is the request, not the search. 3.0 keeps the cheap
    * covering at 5 km (2.76x) and still rejects the coarse cell at 2 km, where
    * it wastes 4.73x to 6.91x depending on latitude.
    */
@@ -198,7 +198,7 @@ export class GeoHash {
    * used to return 4 for anything over 8 km, and nothing is indexed at
    * precision 4, so **every radius above 8 km matched nothing at all**.
    * Measured against a real engine with entities tagged by `encodeMultiTags`:
-   * 15 km returned 0 of 386, 50 km returned 0 of 4,282 — an empty page, with
+   * 15 km returned 0 of 386, 50 km returned 0 of 4,282, an empty page, with
    * no error to explain it.
    *
    * Of the indexed precisions it returns the **coarsest** whose complete
@@ -212,7 +212,7 @@ export class GeoHash {
    * width in degrees, so it narrows in kilometres toward the poles and the same
    * radius needs more of them.
    *
-   * @throws when no indexed precision can cover the radius within the budget —
+   * @throws when no indexed precision can cover the radius within the budget,
    *         refused rather than half-covered.
    */
   static optimalPrecisionForRadius(radiusKm: number, lat = 0, lon = 0): number {
@@ -226,7 +226,7 @@ export class GeoHash {
     // Coarsest first, stopping at the first precision that is accurate enough.
     // Taking the finest that merely fits was the earlier rule and it was wrong:
     // at 15 km that is 1,120 cells for 1.07x the circle where the coarser cell
-    // costs 47 for 1.44x — 24 times the predicates to shave a quarter off an
+    // costs 47 for 1.44x, 24 times the predicates to shave a quarter off an
     // excess that is already small.
     for (const precision of [...this.INDEX_PRECISIONS].sort((a, b) => a - b)) {
       // One past the budget is enough to know it does not fit, and stops a
@@ -264,7 +264,7 @@ export class GeoHash {
    *
    * The covering is always complete. It used to stop at 64 cells and return
    * what it had, so a caller asking for 50 km got cells covering 18% of that
-   * circle — with no error. Now the precision is chosen to fit the budget and
+   * circle, with no error. Now the precision is chosen to fit the budget and
    * the walk always finishes, so the result either covers the circle or the
    * call refuses.
    *
@@ -388,7 +388,7 @@ export class GeoHash {
    * clamped to -179.989 and measured 2.334 km, when the true nearest point is
    * -180.0 at 1.112 km. The cell was rejected from a 2 km radius it is well
    * inside, and five of sixteen points on that circle's rim fell outside the
-   * covering — silently.
+   * covering, silently.
    *
    * Working in deltas normalised to +/-180 removes the discontinuity: the cell
    * either straddles the query meridian, or lies wholly to one side of it and

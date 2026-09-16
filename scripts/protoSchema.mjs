@@ -56,7 +56,7 @@ export function parseProtoSchema(text) {
     body = body.replace(/\benum\s+\w+\s*\{[^}]*\}/g, '');
 
     // `map<k, v>` is matched explicitly. It used to fall outside `[\w.]+`, so a
-    // map field was invisible to this guard — the same blind spot that once let
+    // map field was invisible to this guard, the same blind spot that once let
     // a customer RPC go missing from a vendored copy without failing anything.
     messages[m[1]] = [
       ...body.matchAll(
@@ -73,7 +73,7 @@ export function parseProtoSchema(text) {
 
 /**
  * Human-readable semantic differences between two schemas. Immune to line
- * shifts, comment edits and reordering — it reports what actually changed.
+ * shifts, comment edits and reordering, it reports what actually changed.
  *
  * @param {ProtoSchema} expected @param {ProtoSchema} actual
  * @returns {string[]}
@@ -109,7 +109,7 @@ export function diffProtoSchemas(expected, actual) {
  *
  * The published proto deliberately omits the operator RPCs: no key the
  * dashboard issues can call them, so they are not part of the client's
- * contract. That makes equality the wrong test — what matters is that
+ * contract. That makes equality the wrong test, what matters is that
  * everything the client *does* declare matches the service exactly.
  *
  * Present in the engine only  -> fine, deliberately not exposed.

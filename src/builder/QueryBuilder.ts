@@ -30,8 +30,8 @@ interface QueryState {
    * The next disjunction number to hand out.
    *
    * Group 0 is the default and belongs to plain `should()` calls. Anything
-   * that builds a disjunction of its own — a radius, which becomes one SHOULD
-   * per covering geohash — takes a number from here so it cannot merge with a
+   * that builds a disjunction of its own, a radius, which becomes one SHOULD
+   * per covering geohash, takes a number from here so it cannot merge with a
    * disjunction the caller wrote.
    */
   nextGroup: number;
@@ -97,7 +97,7 @@ export class QueryBuilder {
    * Count every match instead of stopping as soon as the page is full.
    *
    * A paged search stops early, so the `totalMatches` it carries is only what
-   * the engine had counted by then — a lower bound, and one that does not look
+   * the engine had counted by then, a lower bound, and one that does not look
    * like one. This makes the count exact in the same request; `totalIsExact`
    * on the response says which you got.
    */
@@ -177,7 +177,7 @@ export class QueryBuilder {
       }
       // A disjunction of its own. These are one geographic constraint spelled
       // as "any of these cells", and before groups existed they went into the
-      // same OR as everything else the caller had asked for with `should()` —
+      // same OR as everything else the caller had asked for with `should()`,
       // so "within 5 km and (red or blue)" was answered as "within 5 km or red
       // or blue", quietly, with a plausible-looking page of results.
       const group = state.nextGroup;
@@ -196,7 +196,7 @@ export class QueryBuilder {
    * Filter on a numeric field's inclusive range.
    *
    * The field is one you named yourself in the entity's `numbers`. The engine
-   * names none of them — it carried a single `uint32` called `price` until
+   * names none of them, it carried a single `uint32` called `price` until
    * 5.0, which was a schema it had no business holding.
    *
    * A range on a field no entity in your tenant carries is refused by name
@@ -222,7 +222,7 @@ export class QueryBuilder {
       if (!Number.isInteger(value)) {
         throw new PulseIndexQueryError(
           `Range ${name} for "${field}" is ${value}, and the engine's column is a 64-bit ` +
-            'integer. Scale it yourself — a price in cents, a rating out of 100 — rather ' +
+            'integer. Scale it yourself, a price in cents, a rating out of 100, rather ' +
             'than having a bound moved for you.',
         );
       }
@@ -255,8 +255,8 @@ export class QueryBuilder {
   /**
    * Order the page by a numeric field, smallest first.
    *
-   * An ordered search cannot stop as soon as the page is full — the cheapest
-   * remaining row may be anywhere in the tenant — so it costs more than the
+   * An ordered search cannot stop as soon as the page is full, the cheapest
+   * remaining row may be anywhere in the tenant, so it costs more than the
    * same filter unordered. `offset + limit` is capped at 100,000.
    */
   sortAsc(field: string): QueryBuilder {

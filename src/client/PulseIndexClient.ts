@@ -78,14 +78,14 @@ export class PulseIndexClient implements QueryExecutor {
   /**
    * A page of ids together with the real number of matches.
    *
-   * A paged search stops as soon as the page is full — that is what makes it
-   * cost microseconds — so its total is whatever it had counted when it
+   * A paged search stops as soon as the page is full, that is what makes it
+   * cost microseconds, so its total is whatever it had counted when it
    * stopped. Measured on a million entities: a query with 166,325 matches
    * reported 10,866 for a page of 100. Anything that prints "page 1 of N" from
    * that number is wrong by an order of magnitude and looks fine.
    *
-   * One request. This used to run the whole query twice — once for the page,
-   * once for the count — because the wire had no way to ask for both. It does
+   * One request. This used to run the whole query twice, once for the page,
+   * once for the count, because the wire had no way to ask for both. It does
    * now, so this is the same round trip with `exactTotal` set, and the total
    * you get back can be divided by a page size.
    */
@@ -118,7 +118,7 @@ export class PulseIndexClient implements QueryExecutor {
    * this SDK had no business imposing.
    *
    * The parameters are the PHP client's, in its order, because that is the
-   * only thing this helper is for — `index()` is the ergonomic call here.
+   * only thing this helper is for, `index()` is the ergonomic call here.
    * `points` was missing and the two drifted apart while the doc comment on
    * both still said they matched.
    */

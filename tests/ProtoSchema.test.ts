@@ -9,7 +9,7 @@ import { diffProtoSubset, parseProtoSchema, type ProtoSchema } from '../scripts/
  *
  * The SDK loads `proto/engine.proto` at runtime and reads fields by name, with
  * `?? default` fallbacks throughout `PulseIndexClient`. That means a field the
- * engine renames, renumbers or removes does not fail loudly — it yields the
+ * engine renames, renumbers or removes does not fail loudly, it yields the
  * fallback, and the client reports plausible-looking wrong data. Exactly that
  * class of drift left `needs_full_reindex` unobserved while `health()` reported
  * a degraded engine as healthy.
@@ -19,7 +19,7 @@ import { diffProtoSubset, parseProtoSchema, type ProtoSchema } from '../scripts/
  * puts the change in the pull-request diff where it can be reviewed rather than
  * absorbed silently.
  *
- * It does NOT prove the vendored copy matches the engine — nothing inside this
+ * It does NOT prove the vendored copy matches the engine, nothing inside this
  * repository can, since the engine is a separate private repository. Use
  * `npm run check:proto` with the engine checked out for that.
  */

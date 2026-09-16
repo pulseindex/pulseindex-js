@@ -10,7 +10,7 @@ satisfied for the first time here. npm provenance refuses a publish whose
 `package.json` does not name the repository the workflow ran in. And the
 engine's disclosure guard refuses a published archive containing the old
 owner's personal account name, which that field was the only place it appeared
-in — so the guard had failed every run since 2026-09-07, including the one that
+in, so the guard had failed every run since 2026-09-07, including the one that
 published 6.0.0.
 
 Versions up to 6.0.0 keep naming the old account in their signed attestations.
@@ -22,11 +22,11 @@ where the shipped package and the attestation both name the organisation.
 Engine unchanged: this still needs v2.0.0 or later, and nothing on the wire
 moved. The major is for two signatures, below.
 
-### A position given as `points` is indexed with no geo tag — fixed
+### A position given as `points` is indexed with no geo tag, fixed
 
 `points` is the shape this README leads with, and the shape that makes a radius
 exact. Only a top-level `lat` / `lng` pair emitted the `geo:5` / `geo:6` covering
-tags, and `withinRadius` is a SHOULD over exactly those tags — so a record
+tags, and `withinRadius` is a SHOULD over exactly those tags, so a record
 indexed the documented way matched **nothing**. Verified against a live engine
 with 216 positioned records: `within('where', ...)` found the 108 inside the
 circle and `withinRadius({ ..., field: 'where' })` found **0**, neither with an
@@ -37,18 +37,18 @@ Every position in `points` is tagged now, each one of several, and a position
 sent in both shapes is tagged once rather than twice. You do not send a position
 twice in two shapes any more; the READMEs stop telling you to.
 
-### `indexEntity()` takes `points` — **breaking**
+### `indexEntity()` takes `points`: **breaking**
 
 It is documented as the PHP client's signature in the PHP client's order, and it
 was not: PHP takes `(id, categories, numbers, points, tenantId)` and this took
 `(id, categories, numbers, tenantId)`. A fourth positional argument that was a
 tenant is now a points map. `index()` is unaffected and is the call to prefer.
 
-### A fractional range bound is refused rather than moved — **breaking**
+### A fractional range bound is refused rather than moved, **breaking**
 
-`range()` floored both bounds. Flooring is wrong in opposite directions — a
+`range()` floored both bounds. Flooring is wrong in opposite directions, a
 minimum of `4.3` became `4.0` and widened the range, a maximum of `4.9` became
-`4.0` and narrowed it — and neither said so, so the page came back looking
+`4.0` and narrowed it, and neither said so, so the page came back looking
 complete. It throws now, the same way a fraction in `numbers` is refused at index
 time. Scale the number yourself: a price in cents, a rating out of 100.
 
@@ -78,7 +78,7 @@ now. They shipped in 5.0.0 and were never listed.
 Every indexing example showed a bare `price: 250000`, which 5.0.0 turns into
 the tag `price:250000` rather than a number, so a range on it would find
 nothing. Corrected, along with the claim that `price` and `locationPrefix` are
-reserved keys — they are not, and the engine has no field of its own for
+reserved keys, they are not, and the engine has no field of its own for
 either.
 
 Added what 5.0.0 shipped and the README never mentioned: passing `field` to
@@ -98,7 +98,7 @@ talk to a v1 one.
 
 A circle used to be a union of geohash cells, and a union of cells is a superset
 of the circle. Measured against a million entities, a 1 km search returned
-**2,479** rows where **1,241** were really inside — and nothing in the answer
+**2,479** rows where **1,241** were really inside, and nothing in the answer
 said which. You hydrated all 2,479 from your own store and measured them again.
 
 Send a position with the record and the engine settles the edge itself:
@@ -129,7 +129,7 @@ of **333,895**. Any interface printing "N results" from that was wrong by
 several times over and looked fine.
 
 `totalIsExact` now comes from the engine instead of being guessed from
-`limit === 0`, and `searchWithTotal()` is **one request instead of two** — the
+`limit === 0`, and `searchWithTotal()` is **one request instead of two**: the
 wire can ask for a page and a true count together. A page whose matches all fit
 inside it is reported exact, which the old guess got wrong.
 
@@ -156,20 +156,20 @@ engine beyond its hash.
 ### Three things this fixes that were losing data quietly
 
 **A fraction was floored without a word.** `4.3` was sent as `4`, `0.5` as `0`,
-`199.99` as `199` — measured, not inferred. The engine's column is a 64-bit
+`199.99` as `199`: measured, not inferred. The engine's column is a 64-bit
 integer, so a fraction is refused now, with the scaling it needs named. Keep the
 scale on your side: a price in cents, a rating out of 100.
 
 **A field of your own called `price` disappeared.** Sixteen key names were
 reserved out of your attributes, and anything under one was dropped: measured,
 `{price: 250, rating: 4.3, lat: 41, kind: 'villa'}` came out as
-`["rating:4.3", "kind:villa"]` — `price` and `lat` gone, no error. Numbers go
+`["rating:4.3", "kind:villa"]`: `price` and `lat` gone, no error. Numbers go
 through `numbers` now, so nothing in your own object is swallowed.
 
 **A range or an order on a field nothing carries was answered, not refused.**
 It excluded every entity, or left the page in insertion order and reported it as
 sorted. At ten million records `bedrooms 3..6` returned 0 while the tag
-`bedrooms:3` returned 1,666,667. The engine refuses it by name now — but only
+`bedrooms:3` returned 1,666,667. The engine refuses it by name now, but only
 when the tenant holds entities and none of them carries that field, because an
 empty tenant has nothing to be wrong about.
 
@@ -196,7 +196,7 @@ reserved rather than reused.
 area is cheaper than predicates. 4.0.0's threshold was too strict: it rejected
 the coarse cell at 5 km, turning a 10-cell covering into 167. Measured through
 the sibling PHP SDK against a real application with 100,000 properties, a 5 km
-radius went from 3,082 µs to 926 µs on wall time — the cost is the request, not
+radius went from 3,082 µs to 926 µs on wall time, the cost is the request, not
 the search.
 
 The coarse cell is now taken up to 3.0× the circle, which still rejects it at
@@ -230,7 +230,7 @@ what actually breaks says otherwise, so the number says otherwise too.
    silently covering a fraction of its own circle.
 
 4. **`SearchResponse` gained a required `totalIsExact`.** Code that *builds* the
-   type — a test double, a cache, a mapper — fails to compile until it sets it
+   type, a test double, a cache, a mapper, fails to compile until it sets it
    (`TS2741`). Code that only reads search results is unaffected.
 
 ### Migrating
@@ -246,8 +246,8 @@ you search above 80 degrees latitude at a large radius, catch the refusal.
 
 ### The total on a paged search is not the number of matches
 
-A paged search stops as soon as the page is full — that is what makes it cost
-microseconds — so the total it reports is whatever it had counted when it
+A paged search stops as soon as the page is full, that is what makes it cost
+microseconds, so the total it reports is whatever it had counted when it
 stopped. On a million entities, a query with 166,325 matches reported 10,866
 when asked for a page of 100. Anything printing "page 1 of N" from that number
 is wrong by an order of magnitude and looks entirely fine.
@@ -256,7 +256,7 @@ The result now says which it is, and there is a call that gets you the real one:
 
 ```ts
 const page = await client.search(query.limit(20));
-page.totalIsExact;   // false — the search early-exited
+page.totalIsExact;   // false, the search early-exited
 
 const both = await client.searchWithTotal(query.limit(20));
 both.totalIsExact;   // true, at the cost of a second round trip
@@ -290,14 +290,14 @@ went from 5.4x the true count to 1.3x.
 
 The 64-cell limit stopped the search mid-covering and returned what it had, so
 a 50 km circle came back covered 18% and a 1 km circle at fine precision came
-back covered 30% — with no error either time. The limit is now a budget the
+back covered 30%, with no error either time. The limit is now a budget the
 precision is chosen to fit, so the covering always completes. A radius too
 large for any indexed precision is refused by name.
 
 ### `withinRadius` is a pre-filter, not an exact radius
 
 Cells are rectangles and the query is a circle, so the result still contains
-some points outside it — now about 1.1x to 1.8x the circle's area rather than
+some points outside it, now about 1.1x to 1.8x the circle's area rather than
 up to 6x. The engine stores no coordinates, so only you can filter the
 remainder, from your own data after hydration. This was always true and was
 never written down.
@@ -351,7 +351,7 @@ PulseIndex.query()
   .should(['size:s', 'size:m'], 2);
 ```
 
-Left unset it is 0, which is one disjunction — exactly what every existing
+Left unset it is 0, which is one disjunction, exactly what every existing
 query already does.
 
 ### Ordering
@@ -366,8 +366,8 @@ await client.search(PulseIndex.query().must('status:active').sortAsc('price'));
 Rows carrying no value for the field sort last in both directions; they still
 count towards `totalMatches`, they simply have nothing to be ordered by.
 
-An ordered search cannot stop as soon as the page is full — the cheapest
-remaining row may be anywhere in the tenant — so it costs more than the same
+An ordered search cannot stop as soon as the page is full, the cheapest
+remaining row may be anywhere in the tenant, so it costs more than the same
 filter unordered. `offset + limit` is capped at 100,000 and a request past it
 is refused with the ceiling named.
 
@@ -388,7 +388,7 @@ await client.search(PulseIndex.query().tenant('acme').must('status:active').limi
 ```
 
 A limit above the engine's maximum is refused with the maximum named, rather
-than quietly trimmed — a short page that looks complete is worse than an error.
+than quietly trimmed, a short page that looks complete is worse than an error.
 
 ### Zero now means the count
 
@@ -420,15 +420,15 @@ tell "not answering" apart from "not reachable". Both work with any key.
 
 `health()` returned `false` no matter how the service was actually doing. It
 now uses the standard `grpc.health.v1.Health` protocol. The signature is
-unchanged — if you were working around this by ignoring `health()`, you can
+unchanged, if you were working around this by ignoring `health()`, you can
 stop.
 
 ### Added
 
-- `client.servingStatus(service?)` — the raw serving status, for telling
+- `client.servingStatus(service?)`: the raw serving status, for telling
   "reachable but not serving" apart from "no answer at all". Defaults to `''`,
   the overall-server name from the health spec.
-- `SERVING_STATUS` — the status constants, exported from the package root.
+- `SERVING_STATUS`: the status constants, exported from the package root.
 - `healthProtoPath` on the client config, for the rare case of overriding the
   bundled `health.proto`.
 

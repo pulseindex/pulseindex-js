@@ -4,7 +4,7 @@
 //
 // The wire contract for the PulseIndex service. Client SDKs generate stubs
 // directly from this file. Queries return matching entity IDs, which the caller
-// hydrates from its own primary data store — record contents are never sent
+// hydrates from its own primary data store, record contents are never sent
 // here and are never stored by the service.
 //
 // Authentication (transport metadata, not proto fields):
@@ -55,7 +55,7 @@ service SearchEngineService {
 // ---------------------------------------------------------------------------
 
 // IndexEntityRequest describes a single entity to upsert.
-// No record content (name, description, PII) is sent or stored — only the
+// No record content (name, description, PII) is sent or stored, only the
 // attributes you want to filter on.
 message IndexEntityRequest {
   // Stable application-level entity identifier (e.g. listing id).
@@ -73,7 +73,7 @@ message IndexEntityRequest {
   //   {"price_cents": 45000, "bedrooms": 3, "built_at": 1712000000}
   //
   // This replaces a single uint32 named `price` and a uint64 bitfield named
-  // `location_prefix` — one number per record, under a name the engine chose,
+  // `location_prefix`: one number per record, under a name the engine chose,
   // with no negatives and nothing past 4,294,967,295.
   map<string, int64> numbers = 6;
 
@@ -201,7 +201,7 @@ message FilterPredicate {
 
 // RangePredicate filters a continuous numeric field to an inclusive range.
 message RangePredicate {
-  // Numeric field name — whatever you called it in
+  // Numeric field name, whatever you called it in
   // IndexEntityRequest.numbers.
   //
   // A search naming a field no entity in your tenant carries is refused rather
@@ -286,7 +286,7 @@ message SearchQueryRequest {
   repeated RangePredicate ranges = 3;
 
   // Maximum number of entity IDs to return.
-  // 0 asks for the exact `total_matches` and no ids at all — the cheap way to
+  // 0 asks for the exact `total_matches` and no ids at all, the cheap way to
   // count. It does not mean "no limit".
   uint32 limit = 4;
 

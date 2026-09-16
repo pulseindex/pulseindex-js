@@ -65,7 +65,7 @@ async function startMockEngine(options: {
 
   if (!options.omitHealthService) {
     // The real engine adds this WITHOUT its auth interceptor, so the mock must
-    // answer regardless of credentials — a health service that demanded a key
+    // answer regardless of credentials, a health service that demanded a key
     // would not be testing the thing that makes this usable.
     const healthDef = protoLoader.loadSync(resolveHealthProtoPath(), PROTO_LOADER_OPTIONS);
     const healthPkg = grpc.loadPackageDefinition(healthDef) as unknown as {
@@ -257,7 +257,7 @@ describe('PulseIndex client integration', () => {
   // A position in `points` is the shape both READMEs lead with, and the one
   // that makes a radius exact. Only the top-level lat/lng pair used to emit
   // covering tags, so such a record was indexed with no geo tag at all and
-  // withinRadius() — a SHOULD over those tags — matched nothing. An empty
+  // withinRadius(), a SHOULD over those tags, matched nothing. An empty
   // page, silently: §7.15's family exactly. Verified against a live engine
   // with 216 positioned records, where within() found the 108 inside the
   // circle and withinRadius() found 0.
@@ -467,7 +467,7 @@ describe('PulseIndex client integration', () => {
 
   it('reports the rows that changed, not the ids that were sent', async () => {
     // Deleting ids that are already gone is not an error, and the caller has to
-    // be able to tell the difference — a retry of a page that half-applied
+    // be able to tell the difference, a retry of a page that half-applied
     // reports the smaller number rather than failing.
     const engine = await startMockEngine({ liveIds: ['1001'] });
     engines.push(engine);

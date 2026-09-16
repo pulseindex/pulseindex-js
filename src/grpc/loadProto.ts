@@ -141,7 +141,7 @@ export function loadEngineProto(protoPath?: string): LoadedEngineProto {
   return loaded;
 }
 
-/** `grpc.health.v1.Health` — the readiness check that needs no scope. */
+/** `grpc.health.v1.Health`: the readiness check that needs no scope. */
 export interface HealthClient extends grpc.Client {
   check(
     request: { service: string },

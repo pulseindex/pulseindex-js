@@ -75,7 +75,7 @@ export interface SearchResponse {
   /**
    * Whether `totalMatches` is the real number of matches or the early-exit
    * count from a paged search. A paged search stops as soon as the page is
-   * full, which is what makes it cost microseconds — and leaves the total far
+   * full, which is what makes it cost microseconds, and leaves the total far
    * below the truth. Measured on a million entities: a query with 166,325
    * matches reported 10,866 when asked for a page of 100.
    *

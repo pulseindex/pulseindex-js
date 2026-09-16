@@ -57,7 +57,7 @@ jobs:
           echo "tag and package.json agree on $pkg"
 
       # Provenance rejects a package whose repository.url does not match the
-      # repository it was built in, and it rejects it at the registry — after
+      # repository it was built in, and it rejects it at the registry, after
       # the build, the tests and a signed statement already in the public
       # transparency log. The field was simply absent here, which every manual
       # publish tolerated because none of them asked for provenance.
@@ -94,7 +94,7 @@ jobs:
       # OIDC using the id-token permission above. Passing the variable from a
       # secret that does not exist would write an empty _authToken into .npmrc,
       # and npm would then attempt token auth with an empty token rather than
-      # falling through to OIDC — a 401 that reads like a missing secret.
+      # falling through to OIDC: a 401 that reads like a missing secret.
       #
       # If Trusted Publishing is ever removed, add back:
       #   env:
