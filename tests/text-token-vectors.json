@@ -1,0 +1,226 @@
+[
+  {
+    "input": "Müller",
+    "normalized": "muller",
+    "terms": [
+      "muller",
+      "mueller"
+    ],
+    "termTag": "t:muller",
+    "prefixTag": "p:muller",
+    "indexTokens": [
+      "p:mue",
+      "p:muel",
+      "p:muell",
+      "p:muelle",
+      "p:mueller",
+      "p:mul",
+      "p:mull",
+      "p:mulle",
+      "p:muller",
+      "t:mueller",
+      "t:muller",
+      "tv:1"
+    ],
+    "spellingCount": 336
+  },
+  {
+    "input": "Zahnarzt",
+    "normalized": "zahnarzt",
+    "terms": [
+      "zahnarzt"
+    ],
+    "termTag": "t:zahnarzt",
+    "prefixTag": "p:zahnarzt",
+    "indexTokens": [
+      "p:zah",
+      "p:zahn",
+      "p:zahna",
+      "p:zahnar",
+      "p:zahnarz",
+      "p:zahnarzt",
+      "t:zahnarzt",
+      "tv:1"
+    ],
+    "spellingCount": 442
+  },
+  {
+    "input": "Dr. Anna-Lena Schröder",
+    "normalized": "dr anna lena schroder",
+    "terms": [
+      "dr",
+      "anna",
+      "lena",
+      "schroder",
+      "schroeder"
+    ],
+    "termTag": "t:drannalenaschroder",
+    "prefixTag": "t:drannalenaschroder",
+    "indexTokens": [
+      "p:ann",
+      "p:anna",
+      "p:len",
+      "p:lena",
+      "p:sch",
+      "p:schr",
+      "p:schro",
+      "p:schrod",
+      "p:schrode",
+      "p:schroder",
+      "p:schroe",
+      "p:schroed",
+      "p:schroede",
+      "p:schroeder",
+      "t:anna",
+      "t:dr",
+      "t:lena",
+      "t:schroder",
+      "t:schroeder",
+      "tv:1"
+    ],
+    "spellingCount": 960
+  },
+  {
+    "input": "ß",
+    "normalized": "ss",
+    "terms": [
+      "ss"
+    ],
+    "termTag": "t:ss",
+    "prefixTag": "p:ss",
+    "indexTokens": [
+      "t:ss",
+      "tv:1"
+    ],
+    "spellingCount": 128
+  },
+  {
+    "input": "ab",
+    "normalized": "ab",
+    "terms": [
+      "ab"
+    ],
+    "termTag": "t:ab",
+    "prefixTag": "p:ab",
+    "indexTokens": [
+      "t:ab",
+      "tv:1"
+    ],
+    "spellingCount": 130
+  },
+  {
+    "input": "abc",
+    "normalized": "abc",
+    "terms": [
+      "abc"
+    ],
+    "termTag": "t:abc",
+    "prefixTag": "p:abc",
+    "indexTokens": [
+      "p:abc",
+      "t:abc",
+      "tv:1"
+    ],
+    "spellingCount": 182
+  },
+  {
+    "input": "Gastroenterologe",
+    "normalized": "gastroenterologe",
+    "terms": [
+      "gastroenterologe"
+    ],
+    "termTag": "t:gastroenterologe",
+    "prefixTag": "t:gastroenterologe",
+    "indexTokens": [
+      "p:gas",
+      "p:gast",
+      "p:gastr",
+      "p:gastro",
+      "p:gastroe",
+      "p:gastroen",
+      "p:gastroent",
+      "p:gastroente",
+      "p:gastroenter",
+      "p:gastroentero",
+      "t:gastroenterologe",
+      "tv:1"
+    ],
+    "spellingCount": 858
+  },
+  {
+    "input": "İstanbul Üsküdar",
+    "normalized": "istanbul uskudar",
+    "terms": [
+      "istanbul",
+      "uskudar",
+      "ueskuedar"
+    ],
+    "termTag": "t:istanbuluskudar",
+    "prefixTag": "t:istanbuluskudar",
+    "indexTokens": [
+      "p:ist",
+      "p:ista",
+      "p:istan",
+      "p:istanb",
+      "p:istanbu",
+      "p:istanbul",
+      "p:ues",
+      "p:uesk",
+      "p:uesku",
+      "p:ueskue",
+      "p:ueskued",
+      "p:ueskueda",
+      "p:ueskuedar",
+      "p:usk",
+      "p:usku",
+      "p:uskud",
+      "p:uskuda",
+      "p:uskudar",
+      "t:istanbul",
+      "t:ueskuedar",
+      "t:uskudar",
+      "tv:1"
+    ],
+    "spellingCount": 806
+  },
+  {
+    "input": "  spaced   out  ",
+    "normalized": "spaced out",
+    "terms": [
+      "spaced",
+      "out"
+    ],
+    "termTag": "t:spacedout",
+    "prefixTag": "p:spacedout",
+    "indexTokens": [
+      "p:out",
+      "p:spa",
+      "p:spac",
+      "p:space",
+      "p:spaced",
+      "t:out",
+      "t:spaced",
+      "tv:1"
+    ],
+    "spellingCount": 494
+  },
+  {
+    "input": "O’Brien",
+    "normalized": "o brien",
+    "terms": [
+      "o",
+      "brien"
+    ],
+    "termTag": "t:obrien",
+    "prefixTag": "p:obrien",
+    "indexTokens": [
+      "p:bri",
+      "p:brie",
+      "p:brien",
+      "t:brien",
+      "t:o",
+      "tv:1"
+    ],
+    "spellingCount": 338
+  }
+]
