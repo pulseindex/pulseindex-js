@@ -17,6 +17,7 @@ You send attributes to index and queries to run; PulseIndex returns matching ent
 - Attribute flattening so plain objects index without a schema (categories, flags, geo tags), with numbers and positions under names you choose
 - Exact radius and nearest-first ordering, measured by the engine rather than approximated by geohash rectangles
 - A count that says whether it is a count (`totalIsExact`), so a page total is never mistaken for the whole set
+- Typeahead on names and titles, from the first three letters of any word, without the text ever leaving your process
 
 ## Installation
 
@@ -273,12 +274,97 @@ await client.search({
 | `nearest(field, lat, lon)` | Order by distance, nearest first |
 | `whereGeoHash(hash)` / `inGeoHash(hash)` | MUST exact geo cell |
 | `exactTotal()` | Count every match instead of stopping when the page fills |
+| `typeahead(typed)` | Records whose text starts with what was typed, every word, any order. See [Typeahead](#typeahead) |
 | `limit(n)` / `offset(n)` | Pagination (`0` = the count with no ids) |
 | `toRequest()` | Compile the proto-shaped payload |
 | `execute()` | Search via the bound client |
 
 `location(prefix)` is gone. It set `location_prefix`, a `uint64` bitfield the
 engine no longer has, and both SDKs had been sending `0` for it on every request.
+
+## Typeahead
+
+Find a record by the first letters of any word in a name or a title, while
+someone is still typing. The engine never sees the text: at write time `Text`
+turns each value into tags, and at query time it turns what was typed into the
+tags to look for. Both happen in your process.
+
+**Writing.** Add the tags beside the record's own:
+
+```ts
+import { PulseIndex, Text, verifyTextIndex } from '@pulseindex/sdk';
+
+await client.batchIndex(doctors.map((d) => ({
+  entityId: String(d.id),
+  categories: [
+    ...Text.indexTokensFor([d.name, d.specialty]),
+    `city:${d.city}`,
+  ],
+  numbers: { popularity: d.popularity },
+})));
+```
+
+**Searching.** Pass what was typed, and combine it with any other filter:
+
+```ts
+const page = await client.search(
+  client.query()
+    .typeahead('andreas mue')      // Dr. Andreas Müller
+    .must('city:berlin')
+    .sortDesc('popularity')
+    .limit(10),
+);
+// or: client.search({ typeahead: 'andreas mue', must: 'city:berlin', limit: 10 })
+```
+
+**Once at boot**, check that the records were written by the tokenizer this
+version of the SDK speaks. A different one would match nothing, silently, so
+this throws `PULSEINDEX_TOKENIZER_VERSION_MISMATCH` instead. The answer is
+cached per client and tenant:
+
+```ts
+await verifyTextIndex(client);
+```
+
+What it matches:
+
+| Typed | Finds | Why |
+| --- | --- | --- |
+| `mue`, `mul`, `mül` | Müller | German umlauts are indexed both ways, `ü` as `ue` and as `u` |
+| `andreas mue`, `mue andreas` | Dr. Andreas Müller | Every word is required, in any order |
+| `dr mue` | Dr. Andreas Müller, Dr. Thomas Mueller | A finished word under three letters is matched whole |
+| `m` | whatever the rest of the query finds | A last word under three letters adds nothing yet. Skip the search while `Text.typeaheadGroups(typed).length === 0` |
+| `gastroenterologe` | Gastroenterologe | Past twelve letters a word is matched whole, which is what was typed |
+| `محم`, `моск`, `οδο` | محمد, Москва, ΟΔΟΣ | Every script with spaces between words, accents and tashkeel folded |
+
+Chinese, Japanese and Korean have no spaces to split words on, so they are
+matched from the start of each unbroken run of characters.
+
+There is no relevance score. The order is whatever number you supply, as
+above, which is usually what a directory wants anyway: the most booked doctor
+first. For one typo per word, add `Text.spellingTags(word)` as a SHOULD group.
+
+**What it costs.** Text adds tags to every record, and a plan counts records by
+weight (150 bytes is one). How much depends mostly on how many different
+surnames or words your records carry, not on how many records there are.
+Measured on a doctor directory of a million records, name plus specialty:
+
+| Different surnames in the index | Bytes per record | Counts against the plan as |
+| --- | --- | --- |
+| none (no text) | 41 | 1 record |
+| 1,170 | 114 | 1 record |
+| 10,000 | 158 | 1.03 records |
+| 47,000 | 213 | 1.4 records |
+| 121,000 | 271 | 1.8 records |
+| 182,000 | 382 | 2.5 records |
+
+A smaller index with as many different names weighs more per record: at
+400,000 records with 74,000 to 135,000 different surnames, each record counted
+as 1.9 to 2.9. Writing slows too, from about 1.2 million records a second to
+between 80,000 and 220,000, which matters for a first load and not after.
+
+Changing the tokenizer is a breaking change: `Text.TOKENIZER_VERSION` moves,
+and an index written under the old one has to be written again.
 
 ## GeoHash usage
 

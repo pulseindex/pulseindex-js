@@ -379,7 +379,7 @@ const verified = new WeakMap<object, Map<string, TokenizerCheck>>();
  * and the answer is cached per client and tenant, so calling it again is free.
  *
  * ```ts
- * const check = await Text.verifyIndex(client);
+ * const check = await verifyTextIndex(client);
  * if (!check.ok) throw new Error('reindex required');
  * ```
  *
