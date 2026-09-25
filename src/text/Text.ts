@@ -43,11 +43,11 @@ export class Text {
   /**
    * Shortest prefix worth storing.
    *
-   * Two letters match so much of a directory that the posting list costs more
+   * Two letters match so much of a directory that storing them costs more
    * than the answer is worth, and no typeahead fires on two letters anyway.
    * Measured on 400,000 German doctor names: three letters answers in 1.54 us
-   * and five in 1.42, so the floor costs nothing in latency and saves a large
-   * posting list.
+   * and five in 1.42, so the floor costs nothing in latency and saves the
+   * largest tag of all.
    */
   static readonly MIN_PREFIX = 3;
 
@@ -356,8 +356,8 @@ const verified = new WeakMap<object, Map<string, TokenizerCheck>>();
  * # Why this is here and not in the engine
  *
  * `Text.indexTokens` writes `tv:<n>` on every record precisely so a mismatch
- * can be named. Nothing read it until now, so it was a tag that cost a posting
- * list and bought nothing.
+ * can be named. Nothing read it until now, so it was a tag that cost memory
+ * and bought nothing.
  *
  * It is checked here rather than in the engine on purpose. The engine names no
  * field and holds no schema (§5.10 of the engine's notes): it removed a `price`
