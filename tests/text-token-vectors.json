@@ -222,5 +222,231 @@
       "tv:1"
     ],
     "spellingCount": 338
+  },
+  {
+    "input": "Yıldız Çelik",
+    "normalized": "yildiz celik",
+    "terms": [
+      "yildiz",
+      "celik"
+    ],
+    "termTag": "t:yildizcelik",
+    "prefixTag": "p:yildizcelik",
+    "indexTokens": [
+      "p:cel",
+      "p:celi",
+      "p:celik",
+      "p:yil",
+      "p:yild",
+      "p:yildi",
+      "p:yildiz",
+      "t:celik",
+      "t:yildiz",
+      "tv:1"
+    ],
+    "spellingCount": 598
+  },
+  {
+    "input": "Søren Łódź Đorđe Æsir",
+    "normalized": "soren lodz dorde aesir",
+    "terms": [
+      "soren",
+      "lodz",
+      "dorde",
+      "aesir"
+    ],
+    "termTag": "t:sorenlodzdordeaesir",
+    "prefixTag": "t:sorenlodzdordeaesir",
+    "indexTokens": [
+      "p:aes",
+      "p:aesi",
+      "p:aesir",
+      "p:dor",
+      "p:dord",
+      "p:dorde",
+      "p:lod",
+      "p:lodz",
+      "p:sor",
+      "p:sore",
+      "p:soren",
+      "t:aesir",
+      "t:dorde",
+      "t:lodz",
+      "t:soren",
+      "tv:1"
+    ],
+    "spellingCount": 1014
+  },
+  {
+    "input": "محمد العتيبي",
+    "normalized": "محمد العتيبي",
+    "terms": [
+      "محمد",
+      "العتيبي"
+    ],
+    "termTag": "t:محمدالعتيبي",
+    "prefixTag": "p:محمدالعتيبي",
+    "indexTokens": [
+      "p:الع",
+      "p:العت",
+      "p:العتي",
+      "p:العتيب",
+      "p:العتيبي",
+      "p:محم",
+      "p:محمد",
+      "t:العتيبي",
+      "t:محمد",
+      "tv:1"
+    ],
+    "spellingCount": 667
+  },
+  {
+    "input": "مُحَمَّد",
+    "normalized": "محمد",
+    "terms": [
+      "محمد"
+    ],
+    "termTag": "t:محمد",
+    "prefixTag": "p:محمد",
+    "indexTokens": [
+      "p:محم",
+      "p:محمد",
+      "t:محمد",
+      "tv:1"
+    ],
+    "spellingCount": 261
+  },
+  {
+    "input": "أحمد إسلام آمنة",
+    "normalized": "احمد اسلام امنه",
+    "terms": [
+      "احمد",
+      "اسلام",
+      "امنه"
+    ],
+    "termTag": "t:احمداسلامامنه",
+    "prefixTag": "t:احمداسلامامنه",
+    "indexTokens": [
+      "p:احم",
+      "p:احمد",
+      "p:اسل",
+      "p:اسلا",
+      "p:اسلام",
+      "p:امن",
+      "p:امنه",
+      "t:احمد",
+      "t:اسلام",
+      "t:امنه",
+      "tv:1"
+    ],
+    "spellingCount": 783
+  },
+  {
+    "input": "مدرسة مصطفى",
+    "normalized": "مدرسه مصطفي",
+    "terms": [
+      "مدرسه",
+      "مصطفي"
+    ],
+    "termTag": "t:مدرسهمصطفي",
+    "prefixTag": "p:مدرسهمصطفي",
+    "indexTokens": [
+      "p:مدر",
+      "p:مدرس",
+      "p:مدرسه",
+      "p:مصط",
+      "p:مصطف",
+      "p:مصطفي",
+      "t:مدرسه",
+      "t:مصطفي",
+      "tv:1"
+    ],
+    "spellingCount": 609
+  },
+  {
+    "input": "ΟΔΟΣ Αθηνών",
+    "normalized": "οδοσ αθηνων",
+    "terms": [
+      "οδοσ",
+      "αθηνων"
+    ],
+    "termTag": "t:οδοσαθηνων",
+    "prefixTag": "p:οδοσαθηνων",
+    "indexTokens": [
+      "p:αθη",
+      "p:αθην",
+      "p:αθηνω",
+      "p:αθηνων",
+      "p:οδο",
+      "p:οδοσ",
+      "t:αθηνων",
+      "t:οδοσ",
+      "tv:1"
+    ],
+    "spellingCount": 504
+  },
+  {
+    "input": "Москва Йошкар-Ола",
+    "normalized": "москва иошкар ола",
+    "terms": [
+      "москва",
+      "иошкар",
+      "ола"
+    ],
+    "termTag": "t:москваиошкарола",
+    "prefixTag": "t:москваиошкарола",
+    "indexTokens": [
+      "p:иош",
+      "p:иошк",
+      "p:иошка",
+      "p:иошкар",
+      "p:мос",
+      "p:моск",
+      "p:москв",
+      "p:москва",
+      "p:ола",
+      "t:иошкар",
+      "t:москва",
+      "t:ола",
+      "tv:1"
+    ],
+    "spellingCount": 1054
+  },
+  {
+    "input": "٢٠٢٤ ۱۴۰۳",
+    "normalized": "2024 1403",
+    "terms": [
+      "2024",
+      "1403"
+    ],
+    "termTag": "t:20241403",
+    "prefixTag": "p:20241403",
+    "indexTokens": [
+      "p:140",
+      "p:1403",
+      "p:202",
+      "p:2024",
+      "t:1403",
+      "t:2024",
+      "tv:1"
+    ],
+    "spellingCount": 458
+  },
+  {
+    "input": "東京タワー",
+    "normalized": "東京タワー",
+    "terms": [
+      "東京タワー"
+    ],
+    "termTag": "t:東京タワー",
+    "prefixTag": "p:東京タワー",
+    "indexTokens": [
+      "p:東京タ",
+      "p:東京タワ",
+      "p:東京タワー",
+      "t:東京タワー",
+      "tv:1"
+    ],
+    "spellingCount": 1
   }
 ]

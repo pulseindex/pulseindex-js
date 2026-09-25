@@ -14,6 +14,17 @@ const CASES = [
   'İstanbul Üsküdar',          // a dotted capital I, which lowercases oddly
   '  spaced   out  ',
   'O’Brien',                   // a typographic apostrophe
+  // Every script, since the first version dropped anything outside a-z:
+  'Yıldız Çelik',              // Turkish dotless i, which NFKD does not decompose
+  'Søren Łódź Đorđe Æsir',     // more letters with no decomposition
+  'محمد العتيبي',              // Arabic
+  'مُحَمَّد',                   // Arabic with diacritics: the same name as above
+  'أحمد إسلام آمنة',           // alef with hamza and madda
+  'مدرسة مصطفى',               // ta marbuta and alef maqsura
+  'ΟΔΟΣ Αθηνών',               // Greek, with a final sigma
+  'Москва Йошкар-Ола',         // Cyrillic
+  '٢٠٢٤ ۱۴۰۳',                 // Arabic-Indic and Persian digits
+  '東京タワー',                 // CJK: no spaces, no alphabet to misspell in
 ];
 
 const out = CASES.map((input) => ({

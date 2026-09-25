@@ -71,7 +71,34 @@ export class Text {
    */
   static readonly MAX_FUZZY_TERM = 20;
 
-  private static readonly ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
+  /**
+   * Letters Unicode does not decompose, folded to the Latin a person types for
+   * them. Without this they were dropped: "Yıldız", one of the commonest
+   * Turkish surnames, became three fragments, "y ld z", and "Søren" two.
+   */
+  private static readonly UNDECOMPOSED: ReadonlyArray<[string, string]> = [
+    ['ı', 'i'], ['ł', 'l'], ['ø', 'o'], ['đ', 'd'], ['ð', 'd'],
+    ['þ', 'th'], ['æ', 'ae'], ['œ', 'oe'], ['ħ', 'h'],
+  ];
+
+  /**
+   * Arabic, as search engines normalise it (Lucene's ArabicNormalizer): the
+   * diacritics are already gone with the other combining marks; this drops the
+   * tatweel and folds the letters people write interchangeably, so "أحمد" and
+   * "احمد" are one name and "مدرسة" matches "مدرسه". Persian ی and ک fold to
+   * their Arabic forms.
+   */
+  private static readonly ARABIC: ReadonlyArray<[string, string]> = [
+    ['\u0640', ''], ['ٱ', 'ا'], ['ى', 'ي'], ['ة', 'ه'], ['ی', 'ي'], ['ک', 'ك'],
+  ];
+
+  /** One-edit spellings need an alphabet; each script gets its own. */
+  private static readonly ALPHABETS: ReadonlyArray<[RegExp, string]> = [
+    [/\p{Script=Arabic}/u, 'ابتثجحخدذرزسشصضطظعغفقكلمنهويء'],
+    [/\p{Script=Cyrillic}/u, 'абвгдежзиклмнопрстуфхцчшщъыьэюяієґ'],
+    [/\p{Script=Greek}/u, 'αβγδεζηθικλμνξοπρστυφχψω'],
+    [/\p{Script=Latin}|^[0-9]+$/u, 'abcdefghijklmnopqrstuvwxyz'],
+  ];
 
   /** Lowercase, strip accents, and keep only letters, digits and spaces. */
   static normalize(input: string): string {
@@ -98,16 +125,27 @@ export class Text {
   }
 
   private static fold(input: string, german: boolean): string {
-    let s = input.toLowerCase();
+    // Greek final sigma to sigma first: PHP before 8.3 lowercases Σ to σ
+    // everywhere, and the two SDKs have to agree byte for byte.
+    let s = input.toLowerCase().replace(/ς/g, 'σ');
     s = german
       ? s.replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
       : s.replace(/ß/g, 'ss');
-    return s
-      .normalize('NFKD')
-      .replace(/[̀-ͯ]/g, '')
-      .replace(/[^a-z0-9\s]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    for (const [from, to] of Text.UNDECOMPOSED) s = s.split(from).join(to);
+    s = s.normalize('NFKD').replace(/\p{M}/gu, '');
+    for (const [from, to] of Text.ARABIC) s = s.split(from).join(to);
+    s = s
+      .replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+      .replace(/[\u06F0-\u06F9]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
+    // Letters and digits of every script stay. This used to keep a-z and 0-9
+    // only, so Arabic, Cyrillic, Greek and CJK produced no token at all and
+    // every search in them came back empty, with nothing to say why.
+    return s.replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  }
+
+  /** Length and slicing in characters, never UTF-16 code units. */
+  private static chars(s: string): string[] {
+    return Array.from(s);
   }
 
   /** The words of a value, every folding, without duplicates. */
@@ -153,7 +191,7 @@ export class Text {
     for (const folded of Text.foldings(typed)) {
       const t = folded.replace(/\s/g, '');
       if (!t) continue;
-      out.add(t.length > Text.MAX_PREFIX
+      out.add(Text.chars(t).length > Text.MAX_PREFIX
         ? `${Text.TERM_PREFIX}${t}`
         : `${Text.PREFIX_PREFIX}${t}`);
     }
@@ -171,9 +209,10 @@ export class Text {
     const out = new Set<string>([Text.VERSION_TAG]);
     for (const term of Text.terms(value)) {
       out.add(Text.termTag(term));
-      const upper = Math.min(term.length, Text.MAX_PREFIX);
+      const chars = Text.chars(term);
+      const upper = Math.min(chars.length, Text.MAX_PREFIX);
       for (let len = Text.MIN_PREFIX; len <= upper; len++) {
-        for (const tag of Text.prefixTags(term.slice(0, len))) out.add(tag);
+        for (const tag of Text.prefixTags(chars.slice(0, len).join(''))) out.add(tag);
       }
     }
     return [...out];
@@ -196,22 +235,29 @@ export class Text {
   static spellingTags(term: string): string[] {
     const t = Text.normalize(term).replace(/\s/g, '');
     if (!t) return [];
-    if (t.length > Text.MAX_FUZZY_TERM) return [Text.termTag(t)];
+    const c = Text.chars(t);
+    if (c.length > Text.MAX_FUZZY_TERM) return [Text.termTag(t)];
+    // A script with no alphabet to substitute from, Han, kana, Hangul, gets
+    // the exact term: a typo there is not a one-letter edit.
+    const alphabet = Text.ALPHABETS.find(([script]) => script.test(t))?.[1];
+    if (alphabet === undefined) return [Text.termTag(t)];
+    const letters = Text.chars(alphabet);
 
     const out = new Set<string>([t]);
-    for (let i = 0; i < t.length; i++) out.add(t.slice(0, i) + t.slice(i + 1));
-    for (let i = 0; i < t.length - 1; i++) {
-      out.add(t.slice(0, i) + t[i + 1] + t[i] + t.slice(i + 2));
+    const join = (a: string[]) => a.join('');
+    for (let i = 0; i < c.length; i++) out.add(join([...c.slice(0, i), ...c.slice(i + 1)]));
+    for (let i = 0; i < c.length - 1; i++) {
+      out.add(join([...c.slice(0, i), c[i + 1], c[i], ...c.slice(i + 2)]));
     }
-    for (let i = 0; i < t.length; i++) {
-      for (const c of Text.ALPHABET) {
-        if (c !== t[i]) out.add(t.slice(0, i) + c + t.slice(i + 1));
+    for (let i = 0; i < c.length; i++) {
+      for (const l of letters) {
+        if (l !== c[i]) out.add(join([...c.slice(0, i), l, ...c.slice(i + 1)]));
       }
     }
-    for (let i = 0; i <= t.length; i++) {
-      for (const c of Text.ALPHABET) out.add(t.slice(0, i) + c + t.slice(i + 1 - 1));
+    for (let i = 0; i <= c.length; i++) {
+      for (const l of letters) out.add(join([...c.slice(0, i), l, ...c.slice(i)]));
     }
-    return [...out].map((s) => Text.termTag(s));
+    return [...out].map((x) => Text.termTag(x));
   }
 
   /** The tag that says which tokenizer built a record. */

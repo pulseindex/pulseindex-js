@@ -228,3 +228,58 @@ describe('the tokenizer version, which was written and never read', () => {
     expect(Text.indexTokensFor(['a', 'b'])).toContain(Text.VERSION_TAG);
   });
 });
+
+describe('every script, not only a-z', () => {
+  /**
+   * The first version kept a-z and 0-9 and dropped everything else. Arabic,
+   * Cyrillic, Greek and CJK produced no token at all, and letters Unicode does
+   * not decompose were cut out of the middle of a word: "Yıldız", among the
+   * commonest Turkish surnames, became "y ld z". Every search in them came
+   * back empty, with nothing to say why, which is the failure §7.15 of the
+   * engine notes describes.
+   */
+  const found = (typed: string, stored: string) =>
+    Text.prefixTags(typed).some((t) => Text.indexTokens(stored).includes(t));
+
+  it('finds a Turkish surname typed on an English keyboard', () => {
+    expect(Text.normalize('Yıldız')).toBe('yildiz');
+    expect(found('yil', 'Yıldız Çelik')).toBe(true);
+    expect(found('cel', 'Yıldız Çelik')).toBe(true);
+  });
+
+  it('keeps letters Unicode will not decompose instead of cutting them out', () => {
+    expect(Text.normalize('Søren Łódź Đorđe Æsir')).toBe('soren lodz dorde aesir');
+  });
+
+  it('finds an Arabic name by its first letters', () => {
+    expect(found('محم', 'محمد العتيبي')).toBe(true);
+    expect(found('العت', 'محمد العتيبي')).toBe(true);
+  });
+
+  it('treats the spellings Arabic writers use interchangeably as one', () => {
+    expect(Text.normalize('مُحَمَّد')).toBe(Text.normalize('محمد'));
+    expect(Text.normalize('أحمد')).toBe(Text.normalize('احمد'));
+    expect(Text.normalize('إسلام')).toBe(Text.normalize('اسلام'));
+    expect(Text.normalize('مدرسة')).toBe(Text.normalize('مدرسه'));
+    expect(Text.normalize('مصطفى')).toBe(Text.normalize('مصطفي'));
+    expect(Text.normalize('محـــمد')).toBe('محمد');
+    expect(Text.normalize('٢٠٢٤ ۱۴۰۳')).toBe('2024 1403');
+  });
+
+  it('finds Cyrillic and Greek by their first letters, final sigma included', () => {
+    expect(found('моск', 'Москва')).toBe(true);
+    expect(found('οδο', 'ΟΔΟΣ')).toBe(true);
+    expect(Text.normalize('ΟΔΟΣ')).toBe(Text.normalize('οδος'));
+  });
+
+  it('cuts a prefix in characters, not UTF-16 units', () => {
+    // 𠮷 is one character and two UTF-16 units: three characters are one prefix.
+    expect(Text.indexTokens('𠮷野家').includes('p:𠮷野家')).toBe(true);
+  });
+
+  it('corrects a typo in the script it was made in, and not in CJK', () => {
+    expect(Text.spellingTags('محمذ')).toContain(Text.termTag('محمد'));
+    expect(Text.spellingTags('москба')).toContain(Text.termTag('москва'));
+    expect(Text.spellingTags('東京')).toEqual([Text.termTag('東京')]);
+  });
+});
