@@ -17,7 +17,7 @@ You send attributes to index and queries to run; PulseIndex returns matching ent
 - Attribute flattening so plain objects index without a schema (categories, flags, geo tags), with numbers and positions under names you choose
 - Exact radius and nearest-first ordering, measured by the engine rather than approximated by geohash rectangles
 - A count that says whether it is a count (`totalIsExact`), so a page total is never mistaken for the whole set
-- Typeahead on names and titles, from the first three letters of any word, without the text ever leaving your process
+- Typeahead on names and titles, from the first three letters of any word, with no text stored
 
 ## Installation
 
@@ -285,9 +285,10 @@ engine no longer has, and both SDKs had been sending `0` for it on every request
 ## Typeahead
 
 Find a record by the first letters of any word in a name or a title, while
-someone is still typing. The engine never sees the text: at write time `Text`
-turns each value into tags, and at query time it turns what was typed into the
-tags to look for. Both happen in your process.
+someone is still typing. At write time `Text` turns each value into tags such as
+`t:andreas` and `p:and`, and at query time it turns what was typed into the tags
+to look for. The tags reach PulseIndex like any other filter value, and it keeps
+them only as hashes: no name or title is stored as text.
 
 **Writing.** Add the tags beside the record's own:
 

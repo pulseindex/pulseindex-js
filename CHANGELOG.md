@@ -23,7 +23,7 @@ it said. The engine's own deployment runbook had one: its smoke test passed
 ### Typeahead
 
 Find a record by the first letters of any word in a name or a title, while
-someone is still typing. The engine never sees the text: `Text.indexTokensFor`
+someone is still typing. The engine stores no text: `Text.indexTokensFor`
 turns values into tags at write time, and `QueryBuilder.typeahead()` (or the
 `typeahead` search option) turns what was typed into the tags to look for.
 
