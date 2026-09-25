@@ -159,6 +159,11 @@ export interface SearchRequestOptions {
    * still count towards `totalMatches`; they have nothing to be ordered by.
    */
   sortBy?: { field: string; descending?: boolean };
+  /**
+   * What the person has typed so far, one or several words. Needs records
+   * indexed with `Text.indexTokens`. See `QueryBuilder.typeahead`.
+   */
+  typeahead?: string;
 }
 
 export interface EntityAttributes {

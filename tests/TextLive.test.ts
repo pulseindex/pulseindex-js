@@ -74,6 +74,19 @@ describe.skipIf(!ENDPOINT)('Text, against a live engine', () => {
     expect(await typed('sch', { must: ['spec:zahnarzt', 'city:koeln'] })).toEqual([6]);
   });
 
+  const typeahead = async (s: string) => {
+    const r = await client.search({ typeahead: s, limit: 20, exactTotal: true });
+    return r.matchedEntityIds.map(Number).sort((a, b) => a - b);
+  };
+
+  it('finds a record from more than one typed word, in any order', async () => {
+    expect(await typeahead('andreas mue')).toEqual([1]);
+    expect(await typeahead('mue andreas')).toEqual([1]);
+    expect(await typeahead('dr thomas mü')).toEqual([3]);
+    expect(await typeahead('mue zahn')).toEqual([1, 3]);
+    expect(await typeahead('andreas sch')).toEqual([]);
+  });
+
   it('recovers one typo', async () => {
     const r = await client.search({ should: Text.spellingTags('zahnarz'), limit: 20 });
     expect(r.matchedEntityIds.map(Number).sort((a, b) => a - b)).toEqual([1, 3, 6]);

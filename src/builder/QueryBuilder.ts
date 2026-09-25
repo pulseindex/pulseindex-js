@@ -1,4 +1,5 @@
 import { GeoHash } from '../geo/GeoHash';
+import { Text } from '../text/Text';
 import { PulseIndexQueryError } from '../errors/PulseIndexError';
 import {
   FilterOperation,
@@ -188,6 +189,29 @@ export class QueryBuilder {
           attribute: GeoHash.tag(hash),
           group,
         });
+      }
+    });
+  }
+
+  /**
+   * Narrow to records whose text starts with what the person has typed so far,
+   * one or several words, in any order. The records have to have been indexed
+   * with `Text.indexTokens` / `Text.indexTokensFor`.
+   *
+   * Each word takes a group of its own from the same counter a radius uses, so
+   * a typeahead, a radius and your own `should()` groups never merge into one
+   * OR. Adds nothing when nothing typed is long enough yet; check
+   * `Text.typeaheadGroups(typed).length` first if you would rather not search.
+   */
+  typeahead(typed: string): QueryBuilder {
+    const groups = Text.typeaheadGroups(typed);
+    return this.fork((state) => {
+      for (const tags of groups) {
+        const group = state.nextGroup;
+        state.nextGroup += 1;
+        for (const attribute of tags) {
+          state.filters.push({ op: FilterOperation.SHOULD, attribute, group });
+        }
       }
     });
   }
@@ -392,6 +416,9 @@ export class QueryBuilder {
     if (options.geoHash) {
       query = query.whereGeoHash(options.geoHash);
     }
+    if (options.typeahead !== undefined) {
+      query = query.typeahead(options.typeahead);
+    }
     if (options.limit !== undefined) {
       query = query.limit(options.limit);
     }
@@ -452,7 +479,7 @@ export class QueryBuilder {
  */
 const KNOWN_SEARCH_OPTIONS = new Set([
   'tenantId', 'exactTotal', 'must', 'should', 'mustNot', 'ranges',
-  'limit', 'offset', 'withinRadius', 'geoHash', 'sortBy',
+  'limit', 'offset', 'withinRadius', 'geoHash', 'sortBy', 'typeahead',
 ]);
 
 /** The slips worth naming, with what was probably meant. */
@@ -464,6 +491,7 @@ const LIKELY_MEANT: Record<string, string> = {
   radius: 'withinRadius', near: 'withinRadius', geo: 'withinRadius',
   tenant: 'tenantId', size: 'limit', take: 'limit', skip: 'offset',
   total: 'exactTotal', exact: 'exactTotal',
+  autocomplete: 'typeahead', prefix: 'typeahead', query: 'typeahead', q: 'typeahead', text: 'typeahead',
 };
 
 function assertKnownSearchOptions(options: object): void {

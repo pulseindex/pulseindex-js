@@ -199,6 +199,45 @@ export class Text {
   }
 
   /**
+   * What a typeahead asks for when more than one word is typed: one group per
+   * word, each group any of that word's tags, and the groups all required.
+   *
+   * `prefixTags` treats what it is given as one word, so "andreas mue" became
+   * "p:andreasmue", which nothing carries: an empty page for the most ordinary
+   * thing a person types into a search box. Per word, order does not matter
+   * either, "mue andreas" finds the same record.
+   *
+   * A word the person has finished, one before the last, is matched by prefix
+   * when it has at least MIN_PREFIX letters and exactly when shorter, so "dr"
+   * still narrows. The last word is still being typed: under MIN_PREFIX it
+   * adds nothing yet. Both foldings are asked for, which is why "mü" already
+   * finds Müller and Mueller: German folding makes it "mue".
+   *
+   * An empty result means nothing typed is long enough to search on yet.
+   */
+  static typeaheadGroups(typed: string): string[][] {
+    const foldings = Text.foldings(typed).map((f) => f.split(' ').filter(Boolean));
+    const words = Math.max(...foldings.map((f) => f.length));
+    const groups: string[][] = [];
+    for (let i = 0; i < words; i++) {
+      const last = i === words - 1;
+      const tags = new Set<string>();
+      for (const folded of foldings) {
+        const word = folded[i];
+        if (word === undefined) continue;
+        const n = Text.chars(word).length;
+        if (n >= Text.MIN_PREFIX) {
+          tags.add(n > Text.MAX_PREFIX ? `${Text.TERM_PREFIX}${word}` : `${Text.PREFIX_PREFIX}${word}`);
+        } else if (!last) {
+          tags.add(`${Text.TERM_PREFIX}${word}`);
+        }
+      }
+      if (tags.size > 0) groups.push([...tags]);
+    }
+    return groups;
+  }
+
+  /**
    * Every tag one value contributes at write time.
    *
    * Expressed through `prefixTag` and `termTag` rather than building strings

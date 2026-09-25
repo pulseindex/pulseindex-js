@@ -329,3 +329,39 @@ describe('a search option the SDK does not know', () => {
     ).not.toThrow();
   });
 });
+
+describe('typeahead', () => {
+  it('puts each word in a disjunction of its own', () => {
+    const request = PulseIndex.query().typeahead('andreas mül').toRequest();
+    expect(request.filters).toEqual([
+      { op: FilterOperation.SHOULD, attribute: 'p:andreas', group: 1 },
+      { op: FilterOperation.SHOULD, attribute: 'p:mul', group: 2 },
+      { op: FilterOperation.SHOULD, attribute: 'p:muel', group: 2 },
+    ]);
+  });
+
+  it('keeps clear of a radius and of the caller\'s own groups', () => {
+    const request = PulseIndex.query()
+      .should(['color:red', 'color:blue'])
+      .withinRadius(42.6, -5.6, 4.9)
+      .typeahead('andreas mue')
+      .toRequest();
+    const groupOf = (prefix: string) =>
+      new Set(request.filters.filter((f) => f.attribute.startsWith(prefix)).map((f) => f.group));
+
+    expect(groupOf('color:')).toEqual(new Set([0]));
+    expect(groupOf('geo:')).toEqual(new Set([1]));
+    expect(groupOf('p:andreas')).toEqual(new Set([2]));
+    expect(groupOf('p:mue')).toEqual(new Set([3]));
+  });
+
+  it('adds nothing while nothing typed is long enough', () => {
+    expect(PulseIndex.query().typeahead('m').toRequest().filters).toEqual([]);
+  });
+
+  it('is a search option, and its likely misspellings are refused by name', () => {
+    const viaOption = QueryBuilder.fromOptions({ typeahead: 'andreas mue' }).toRequest();
+    expect(viaOption.filters).toEqual(PulseIndex.query().typeahead('andreas mue').toRequest().filters);
+    expect(() => QueryBuilder.fromOptions({ autocomplete: 'mue' } as never)).toThrow(/typeahead/);
+  });
+});

@@ -283,3 +283,39 @@ describe('every script, not only a-z', () => {
     expect(Text.spellingTags('東京')).toEqual([Text.termTag('東京')]);
   });
 });
+
+describe('a typeahead of more than one word', () => {
+  /**
+   * `prefixTags` reads what it is given as one word, so "andreas mue" asked for
+   * "p:andreasmue", which no record carries: an empty page for the most
+   * ordinary thing typed into a search box.
+   */
+  it('used to be one prefix no record carries', () => {
+    expect(Text.prefixTags('andreas mue')).toEqual(['p:andreasmue']);
+  });
+
+  it('asks for every word, each by its own prefix', () => {
+    expect(Text.typeaheadGroups('andreas mue')).toEqual([['p:andreas'], ['p:mue']]);
+  });
+
+  it('asks for both German foldings of a word, as one choice', () => {
+    expect(Text.typeaheadGroups('andreas mül')).toEqual([['p:andreas'], ['p:mul', 'p:muel']]);
+  });
+
+  it('matches a short finished word exactly and waits on a short last one', () => {
+    expect(Text.typeaheadGroups('dr mue')).toEqual([['t:dr'], ['p:mue']]);
+    expect(Text.typeaheadGroups('andreas m')).toEqual([['p:andreas']]);
+    expect(Text.typeaheadGroups('m')).toEqual([]);
+    expect(Text.typeaheadGroups('  ')).toEqual([]);
+  });
+
+  it('asks for the exact term once a word passes the prefix ceiling', () => {
+    expect(Text.typeaheadGroups('gastroenterologe ber')).toEqual([['t:gastroenterologe'], ['p:ber']]);
+  });
+
+  it('agrees with prefixTags on a single word', () => {
+    for (const w of ['mue', 'müll', 'Özdemir', 'straße', 'Москва', 'محمد']) {
+      expect(Text.typeaheadGroups(w)).toEqual([Text.prefixTags(w)]);
+    }
+  });
+});
