@@ -284,3 +284,48 @@ describe('QueryBuilder', () => {
   });
 
 });
+
+describe('a search option the SDK does not know', () => {
+  /**
+   * Reproduced against production on 2026-09-25: `range` instead of `ranges`
+   * ran the search with no range at all and returned a plausible page, with
+   * nothing to say the filter had been dropped. The PHP SDK already refuses an
+   * unknown key on a record; this is the same rule for a search.
+   */
+  it('is refused by name rather than ignored', () => {
+    expect(() =>
+      QueryBuilder.fromOptions({ must: ['a:b'], range: [{ field: 'price', min: 1, max: 2 }] } as never),
+    ).toThrow(/unknown search option "range".*ranges/);
+  });
+
+  it('names the likely meaning of the common slips', () => {
+    const cases: Array<[string, RegExp]> = [
+      ['filters', /must/],
+      ['filter', /must/],
+      ['where', /must/],
+      ['sort', /sortBy/],
+      ['orderBy', /sortBy/],
+      ['radius', /withinRadius/],
+      ['tenant', /tenantId/],
+    ];
+    for (const [key, hint] of cases) {
+      expect(() => QueryBuilder.fromOptions({ [key]: 'x' } as never)).toThrow(hint);
+    }
+  });
+
+  it('still accepts every option it documents', () => {
+    expect(() =>
+      QueryBuilder.fromOptions({
+        tenantId: 't',
+        exactTotal: true,
+        must: ['a:b'],
+        should: ['c:d'],
+        mustNot: ['e:f'],
+        ranges: [{ field: 'price', min: 1, max: 2 }],
+        limit: 10,
+        offset: 0,
+        sortBy: { field: 'price' },
+      }),
+    ).not.toThrow();
+  });
+});

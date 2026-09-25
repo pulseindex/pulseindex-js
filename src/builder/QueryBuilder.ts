@@ -363,6 +363,7 @@ export class QueryBuilder {
     options: SearchRequestOptions,
     executor: QueryExecutor | null = null,
   ): QueryBuilder {
+    assertKnownSearchOptions(options);
     let query = new QueryBuilder(executor);
 
     if (options.tenantId !== undefined) {
@@ -438,5 +439,43 @@ export class QueryBuilder {
     };
     mutate(next.state);
     return next;
+  }
+}
+
+/**
+ * Every search option this SDK reads. Anything else is refused by name.
+ *
+ * An unknown key used to be ignored, so a typo ran a different search than the
+ * one written: `range` for `ranges`, reproduced against production on
+ * 2026-09-25, dropped the price range and still returned a plausible page. The
+ * PHP SDK already refuses an unknown key on a record for the same reason.
+ */
+const KNOWN_SEARCH_OPTIONS = new Set([
+  'tenantId', 'exactTotal', 'must', 'should', 'mustNot', 'ranges',
+  'limit', 'offset', 'withinRadius', 'geoHash', 'sortBy',
+]);
+
+/** The slips worth naming, with what was probably meant. */
+const LIKELY_MEANT: Record<string, string> = {
+  range: 'ranges', numericRange: 'ranges', between: 'ranges',
+  filter: 'must', filters: 'must', where: 'must', tags: 'must', categories: 'must',
+  any: 'should', or: 'should', not: 'mustNot', exclude: 'mustNot',
+  sort: 'sortBy', orderBy: 'sortBy', order: 'sortBy',
+  radius: 'withinRadius', near: 'withinRadius', geo: 'withinRadius',
+  tenant: 'tenantId', size: 'limit', take: 'limit', skip: 'offset',
+  total: 'exactTotal', exact: 'exactTotal',
+};
+
+function assertKnownSearchOptions(options: object): void {
+  for (const key of Object.keys(options)) {
+    if (KNOWN_SEARCH_OPTIONS.has(key)) {
+      continue;
+    }
+    const meant = LIKELY_MEANT[key];
+    throw new PulseIndexQueryError(
+      `unknown search option "${key}"` +
+        (meant ? `; did you mean "${meant}"?` : '') +
+        ` Known options: ${[...KNOWN_SEARCH_OPTIONS].join(', ')}`,
+    );
   }
 }
