@@ -1,5 +1,47 @@
 # Changelog
 
+## 7.0.0
+
+Engine unchanged: this still needs v2.0.0 or later, and nothing on the wire
+moved. The major is for one behaviour, below, that turns a silent wrong answer
+into an error.
+
+### An unknown search option is refused
+
+`search()` ignored a key it did not know, so a typo ran a different search from
+the one written. Reproduced against production: `range` where `ranges` was
+meant dropped the price range and still returned a plausible page, with nothing
+in the answer to say a filter was missing. `search()` now throws a
+`PulseIndexQueryError` naming the key, and the likely meaning for the common
+slips (`range`, `filter`, `filters`, `where`, `sort`, `orderBy`, `radius`,
+`tenant` and a few more).
+
+**If this throws after upgrading**, the search it replaces was not doing what
+it said. The engine's own deployment runbook had one: its smoke test passed
+`filters`, which the SDK has never read, and passed on any non-empty tenant.
+
+### Typeahead
+
+Find a record by the first letters of any word in a name or a title, while
+someone is still typing. The engine never sees the text: `Text.indexTokensFor`
+turns values into tags at write time, and `QueryBuilder.typeahead()` (or the
+`typeahead` search option) turns what was typed into the tags to look for.
+
+- Every word is required, in any order: `andreas mue` finds Dr. Andreas Müller.
+- German umlauts are indexed both ways, so `mue` and `mul` both find Müller.
+- Every script with spaces between words: Latin, Arabic (normalised the way
+  Lucene does it), Cyrillic, Greek. Chinese, Japanese and Korean match from the
+  start of each run of characters.
+- `Text.spellingTags` gives one typo per word.
+- `verifyTextIndex(client)` at boot refuses an index written by a different
+  tokenizer version, which would otherwise match nothing, silently.
+
+The PHP SDK 6.1.0 generates the same tags, byte for byte: both assert one
+shared vector file, and the PHP SDK reads back records written with this one's
+tags through a real engine. The README has the cost, in plan weight: from 1
+record each on a small vocabulary to 2.5 on a directory with 182,000 different
+surnames.
+
 ## 6.0.1
 
 No code change. `repository.url` names the `pulseindex` organisation, which is

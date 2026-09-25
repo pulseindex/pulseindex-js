@@ -1,11 +1,11 @@
 {
   "name": "@pulseindex/sdk",
-  "version": "6.0.1",
+  "version": "7.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pulseindex/pulseindex-js.git"
   },
-  "description": "Official Node.js & TypeScript SDK for PulseIndex \u2014 hosted search and filtering for large entity sets",
+  "description": "Official Node.js & TypeScript SDK for PulseIndex: hosted search and filtering for large entity sets",
   "license": "MIT",
   "author": "PulseIndex",
   "keywords": [
