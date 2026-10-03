@@ -1,0 +1,312 @@
+// PulseIndex Engine gRPC API
+//
+// Package: pulseindex.engine.v1
+//
+// The wire contract for the PulseIndex service. Client SDKs generate stubs
+// directly from this file. Queries return matching entity IDs, which the caller
+// hydrates from its own primary data store, record contents are never sent
+// here and are never stored by the service.
+//
+// Authentication (transport metadata, not proto fields):
+//   - Header `x-api-key: <key>`  OR
+//   - Header `authorization: Bearer <key>`
+//   Keys are issued and revoked from the PulseIndex dashboard.
+//
+// Multi-tenancy:
+//   Every mutating / query RPC that touches index state carries `tenant_id`.
+//   Empty `tenant_id` is normalized server-side to `"default"`. Tenants are
+//   fully isolated from one another.
+//
+syntax = "proto3";
+
+package pulseindex.engine.v1;
+
+// SearchEngineService is the PulseIndex query and indexing API.
+service SearchEngineService {
+  // IndexEntity upserts a single entity into the tenant's index.
+  // Re-indexing the same entity_id within a tenant replaces its attributes and
+  // restores it if it had been deleted.
+  rpc IndexEntity (IndexEntityRequest) returns (IndexEntityResponse);
+
+  // BatchIndexEntities indexes many entities in one RPC.
+  // Processing is ordered; capacity / auth failures abort the batch.
+  rpc BatchIndexEntities (BatchIndexEntitiesRequest) returns (BatchIndexEntitiesResponse);
+
+  // DeleteEntity deletes an entity inside a tenant.
+  // The entity id is excluded from subsequent Search results for that tenant.
+  rpc DeleteEntity (DeleteEntityRequest) returns (DeleteEntityResponse);
+
+  // BatchDeleteEntities deletes many entities in one RPC.
+  // Use this to clear a catalogue: DeleteEntity takes a single id.
+  rpc BatchDeleteEntities (BatchDeleteEntitiesRequest) returns (BatchDeleteEntitiesResponse);
+
+  // Search applies the boolean filters (MUST / SHOULD / MUST_NOT) plus optional
+  // numeric range predicates and returns matching entity IDs only.
+  // On a page, `total_matches` may be a lower bound: `total_is_exact` says
+  // which, and `exact_total` asks for the exact count.
+  rpc Search (SearchQueryRequest) returns (SearchQueryResponse);
+
+
+
+}
+
+// ---------------------------------------------------------------------------
+// Indexing
+// ---------------------------------------------------------------------------
+
+// IndexEntityRequest describes a single entity to upsert.
+// No record content (name, description, PII) is sent or stored, only the
+// attributes you want to filter on.
+message IndexEntityRequest {
+  // Stable application-level entity identifier (e.g. listing id).
+  uint64 entity_id = 1;
+
+  reserved 2, 3;
+  reserved "location_prefix", "price";
+
+  // Numeric fields under your own names. Any name, any int64, any number of
+  // them, each filterable through RangePredicate and orderable through
+  // SortSpec. Call them whatever your own records call them:
+  //
+  //   {"price_cents": 45000, "bedrooms": 3, "built_at": 1712000000}
+  map<string, int64> numbers = 6;
+
+  // Positions in degrees, under your own names, the same way `numbers` are.
+  //
+  //   points: { "where": { lat: 41.0369, lon: 28.9850 } }
+  //
+  // A name used here and in `numbers` on the same record is refused: a field
+  // is either a number or a position.
+  map<string, GeoPoint> points = 7;
+
+  // Attribute tokens already namespaced by the client, e.g.:
+  //   "feature:pool", "furnishing:full", "amenity:parking"
+  // Tokens are matched exactly; they are never stored as readable text.
+  repeated string categories = 4;
+
+  // Tenant / namespace isolation key. Empty string → server uses "default".
+  // Two tenants may reuse the same entity_id without colliding.
+  string tenant_id = 5;
+}
+
+// IndexEntityResponse acknowledges a successful upsert.
+// GeoPoint is one position in degrees.
+message GeoPoint {
+  double lat = 1;
+  double lon = 2;
+}
+
+message IndexEntityResponse {
+  // True when the entity was accepted into the index.
+  // Capacity violations return gRPC RESOURCE_EXHAUSTED instead.
+  bool success = 1;
+}
+
+// BatchIndexEntitiesRequest wraps multiple IndexEntityRequest messages.
+message BatchIndexEntitiesRequest {
+  // Entities to index. Each entry may specify its own tenant_id.
+  repeated IndexEntityRequest entities = 1;
+}
+
+// BatchIndexEntitiesResponse reports how many entities were indexed.
+message BatchIndexEntitiesResponse {
+  // Number of entities successfully indexed in this batch.
+  uint32 indexed_count = 1;
+}
+
+// ---------------------------------------------------------------------------
+// Deletion
+// ---------------------------------------------------------------------------
+
+// DeleteEntityRequest deletes one entity within a tenant.
+message DeleteEntityRequest {
+  // Entity id to delete.
+  uint64 entity_id = 1;
+
+  // Tenant that owns the entity. Empty → "default".
+  string tenant_id = 2;
+}
+
+// DeleteEntityResponse reports whether a live entity was deleted.
+message DeleteEntityResponse {
+  // True if the entity was present and deleted; false if unknown / already deleted.
+  bool success = 1;
+}
+
+// BatchDeleteEntitiesRequest deletes many entities in one tenant.
+message BatchDeleteEntitiesRequest {
+  // Entity ids to delete. Ids that are unknown or already deleted are skipped
+  // rather than refused, so retrying a batch that half-applied is safe.
+  // Repeating an id inside one batch deletes it once.
+  //
+  // A batch above the server's maximum is refused with INVALID_ARGUMENT naming
+  // the ceiling, never silently truncated.
+  repeated uint64 entity_ids = 1;
+
+  // Tenant that owns the entities. Empty → "default". One tenant per batch.
+  string tenant_id = 2;
+}
+
+// BatchDeleteEntitiesResponse reports how many rows actually changed.
+message BatchDeleteEntitiesResponse {
+  // Number of entities that were live and are now deleted. Lower than the
+  // number of ids sent when some were unknown or already deleted; that is not
+  // an error.
+  uint32 deleted_count = 1;
+}
+
+// ---------------------------------------------------------------------------
+// Search predicates
+// ---------------------------------------------------------------------------
+
+// FilterPredicate is a categorical / attribute filter.
+message FilterPredicate {
+  // How this predicate combines with the matches accumulated so far.
+  enum Operation {
+    // Conjunction: narrows the current match set.
+    MUST = 0;
+    // Disjunction: SHOULD predicates sharing a `group` are OR'd together, and
+    // each group then narrows the match set.
+    SHOULD = 1;
+    // Exclusion: removes matches carrying this attribute.
+    MUST_NOT = 2;
+  }
+
+  // How this predicate combines with the current match set.
+  Operation op = 1;
+
+  // Attribute token identical to those used at index time, e.g. "feature:pool".
+  string attribute = 2;
+
+  // Which disjunction this SHOULD predicate belongs to. Ignored for MUST and
+  // MUST_NOT.
+  //
+  // Members of a group are OR'd together; the groups are AND'd with each other,
+  // so "(red or blue) and (size 42 or 43)" is two groups. Predicates that leave
+  // this unset share group 0, which is the single-group behaviour.
+  uint32 group = 3;
+}
+
+// RangePredicate filters a continuous numeric field to an inclusive range.
+message RangePredicate {
+  // Numeric field name, whatever you called it in
+  // IndexEntityRequest.numbers.
+  //
+  // A search naming a field no entity in your tenant carries is refused rather
+  // than answered: it can only match nothing, and an empty page looks exactly
+  // like a real one.
+  string field = 1;
+
+  // Inclusive lower bound of the requested range.
+  // int64, so a bound may be negative and may go past 4,294,967,295.
+  int64 min_val = 2;
+
+  // Inclusive upper bound of the requested range.
+  int64 max_val = 3;
+}
+
+// SortSpec orders a page by a numeric field.
+//
+// Without it, results come back in entity-id order. Entities carrying no value
+// for the field sort last in both directions; they are still counted in
+// total_matches, they simply have nothing to be ordered by.
+//
+// offset + limit is capped at 100,000.
+// GeoPredicate names a position field and a point to measure from. With a
+// radius, only records whose distance from the point is within it match.
+message GeoPredicate {
+  // The position field, named as you named it in IndexEntityRequest.points.
+  string field = 1;
+
+  double lat = 2;
+  double lon = 3;
+
+  // Inclusive radius in kilometres. Zero means no radius filter at all: the
+  // point is then only an origin to measure from, for SortSpec.by_distance.
+  double radius_km = 4;
+}
+
+message SortSpec {
+  // Numeric field name, the same one a RangePredicate would name, and bounded
+  // the same way: a name no entity carries is refused, not silently ignored.
+  string field = 1;
+
+  // Largest first when true; smallest first otherwise. With by_distance,
+  // false is nearest-first.
+  bool descending = 2;
+
+  // Order by distance from GeoPredicate's point rather than by a field value.
+  //
+  // `field` is ignored and the geo predicate must be present, so "the nearest
+  // fifty" is one request.
+  //
+  // Ordering is to the centimetre. Rows closer together than that tie, and a
+  // tie breaks on the entity id so the same query returns the same page.
+  bool by_distance = 3;
+}
+
+// ---------------------------------------------------------------------------
+// Search
+// ---------------------------------------------------------------------------
+
+// SearchQueryRequest executes a filtered search inside one tenant.
+message SearchQueryRequest {
+  reserved 1;
+  reserved "location_prefix";
+
+  // Attribute predicates (MUST / SHOULD / MUST_NOT). Order does not affect the
+  // result.
+  repeated FilterPredicate filters = 2;
+
+  // Optional numeric range filters (e.g. price between min_val and max_val).
+  repeated RangePredicate ranges = 3;
+
+  // Maximum number of entity IDs to return.
+  // 0 asks for the exact `total_matches` and no ids at all, the cheap way to
+  // count. It does not mean "no limit".
+  uint32 limit = 4;
+
+  // Number of matches to skip before collecting results (pagination).
+  uint32 offset = 5;
+
+  // Tenant / namespace to search. Empty → "default".
+  string tenant_id = 6;
+
+  // Optional ordering. Absent returns matches in entity-id order.
+  SortSpec sort = 7;
+
+  // Count every match instead of stopping as soon as the page is full.
+  //
+  // A page query's count may be partial, which is usually what a page wants,
+  // and cheaper. Set this when you need the exact total alongside the page:
+  // one request instead of two, and total_is_exact comes back true.
+  //
+  // limit == 0 already implies it: a count-only request has no page to fill.
+  bool exact_total = 8;
+
+  // Optional circle, and the position field to measure against.
+  GeoPredicate geo = 9;
+}
+
+// SearchQueryResponse returns matched ids and timing metadata.
+message SearchQueryResponse {
+  // Entity IDs that satisfied all predicates (after offset/limit).
+  // Caller hydrates full records from the primary data store.
+  repeated uint64 matched_entity_ids = 1;
+
+  // How many entities matched. Exact when total_is_exact; otherwise a lower
+  // bound: read that field before showing this number to anyone.
+  uint32 total_matches = 2;
+
+  // Server-side execution time in microseconds (excludes network RTT).
+  uint64 execution_time_us = 3;
+
+  // Whether total_matches is the whole answer.
+  //
+  // False means the search stopped once the page was full, so the count is a
+  // lower bound. Send exact_total to get the exact count in the same request.
+  //
+  // True whenever the scan finished, which includes a page query whose matches
+  // all fit inside it: nothing was skipped, so nothing is missing.
+  bool total_is_exact = 4;
+}

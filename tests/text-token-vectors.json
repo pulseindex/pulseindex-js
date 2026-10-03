@@ -1,0 +1,451 @@
+[
+  {
+    "input": "Müller",
+    "normalized": "muller",
+    "terms": [
+      "muller",
+      "mueller"
+    ],
+    "termTag": "t:muller",
+    "prefixTag": "p:muller",
+    "indexTokens": [
+      "p:mue",
+      "p:muel",
+      "p:muell",
+      "p:muelle",
+      "p:mueller",
+      "p:mul",
+      "p:mull",
+      "p:mulle",
+      "p:muller",
+      "t:mueller",
+      "t:muller",
+      "tv:1"
+    ],
+    "spellingCount": 336
+  },
+  {
+    "input": "Zahnarzt",
+    "normalized": "zahnarzt",
+    "terms": [
+      "zahnarzt"
+    ],
+    "termTag": "t:zahnarzt",
+    "prefixTag": "p:zahnarzt",
+    "indexTokens": [
+      "p:zah",
+      "p:zahn",
+      "p:zahna",
+      "p:zahnar",
+      "p:zahnarz",
+      "p:zahnarzt",
+      "t:zahnarzt",
+      "tv:1"
+    ],
+    "spellingCount": 442
+  },
+  {
+    "input": "Dr. Anna-Lena Schröder",
+    "normalized": "dr anna lena schroder",
+    "terms": [
+      "dr",
+      "anna",
+      "lena",
+      "schroder",
+      "schroeder"
+    ],
+    "termTag": "t:drannalenaschroder",
+    "prefixTag": "t:drannalenaschroder",
+    "indexTokens": [
+      "p:ann",
+      "p:anna",
+      "p:len",
+      "p:lena",
+      "p:sch",
+      "p:schr",
+      "p:schro",
+      "p:schrod",
+      "p:schrode",
+      "p:schroder",
+      "p:schroe",
+      "p:schroed",
+      "p:schroede",
+      "p:schroeder",
+      "t:anna",
+      "t:dr",
+      "t:lena",
+      "t:schroder",
+      "t:schroeder",
+      "tv:1"
+    ],
+    "spellingCount": 960
+  },
+  {
+    "input": "ß",
+    "normalized": "ss",
+    "terms": [
+      "ss"
+    ],
+    "termTag": "t:ss",
+    "prefixTag": "p:ss",
+    "indexTokens": [
+      "t:ss",
+      "tv:1"
+    ],
+    "spellingCount": 128
+  },
+  {
+    "input": "ab",
+    "normalized": "ab",
+    "terms": [
+      "ab"
+    ],
+    "termTag": "t:ab",
+    "prefixTag": "p:ab",
+    "indexTokens": [
+      "t:ab",
+      "tv:1"
+    ],
+    "spellingCount": 130
+  },
+  {
+    "input": "abc",
+    "normalized": "abc",
+    "terms": [
+      "abc"
+    ],
+    "termTag": "t:abc",
+    "prefixTag": "p:abc",
+    "indexTokens": [
+      "p:abc",
+      "t:abc",
+      "tv:1"
+    ],
+    "spellingCount": 182
+  },
+  {
+    "input": "Gastroenterologe",
+    "normalized": "gastroenterologe",
+    "terms": [
+      "gastroenterologe"
+    ],
+    "termTag": "t:gastroenterologe",
+    "prefixTag": "t:gastroenterologe",
+    "indexTokens": [
+      "p:gas",
+      "p:gast",
+      "p:gastr",
+      "p:gastro",
+      "p:gastroe",
+      "p:gastroen",
+      "p:gastroent",
+      "p:gastroente",
+      "p:gastroenter",
+      "p:gastroentero",
+      "t:gastroenterologe",
+      "tv:1"
+    ],
+    "spellingCount": 858
+  },
+  {
+    "input": "İstanbul Üsküdar",
+    "normalized": "istanbul uskudar",
+    "terms": [
+      "istanbul",
+      "uskudar",
+      "ueskuedar"
+    ],
+    "termTag": "t:istanbuluskudar",
+    "prefixTag": "t:istanbuluskudar",
+    "indexTokens": [
+      "p:ist",
+      "p:ista",
+      "p:istan",
+      "p:istanb",
+      "p:istanbu",
+      "p:istanbul",
+      "p:ues",
+      "p:uesk",
+      "p:uesku",
+      "p:ueskue",
+      "p:ueskued",
+      "p:ueskueda",
+      "p:ueskuedar",
+      "p:usk",
+      "p:usku",
+      "p:uskud",
+      "p:uskuda",
+      "p:uskudar",
+      "t:istanbul",
+      "t:ueskuedar",
+      "t:uskudar",
+      "tv:1"
+    ],
+    "spellingCount": 806
+  },
+  {
+    "input": "  spaced   out  ",
+    "normalized": "spaced out",
+    "terms": [
+      "spaced",
+      "out"
+    ],
+    "termTag": "t:spacedout",
+    "prefixTag": "p:spacedout",
+    "indexTokens": [
+      "p:out",
+      "p:spa",
+      "p:spac",
+      "p:space",
+      "p:spaced",
+      "t:out",
+      "t:spaced",
+      "tv:1"
+    ],
+    "spellingCount": 494
+  },
+  {
+    "input": "O’Brien",
+    "normalized": "o brien",
+    "terms": [
+      "o",
+      "brien"
+    ],
+    "termTag": "t:obrien",
+    "prefixTag": "p:obrien",
+    "indexTokens": [
+      "p:bri",
+      "p:brie",
+      "p:brien",
+      "t:brien",
+      "t:o",
+      "tv:1"
+    ],
+    "spellingCount": 338
+  },
+  {
+    "input": "Yıldız Çelik",
+    "normalized": "yildiz celik",
+    "terms": [
+      "yildiz",
+      "celik"
+    ],
+    "termTag": "t:yildizcelik",
+    "prefixTag": "p:yildizcelik",
+    "indexTokens": [
+      "p:cel",
+      "p:celi",
+      "p:celik",
+      "p:yil",
+      "p:yild",
+      "p:yildi",
+      "p:yildiz",
+      "t:celik",
+      "t:yildiz",
+      "tv:1"
+    ],
+    "spellingCount": 598
+  },
+  {
+    "input": "Søren Łódź Đorđe Æsir",
+    "normalized": "soren lodz dorde aesir",
+    "terms": [
+      "soren",
+      "lodz",
+      "dorde",
+      "aesir"
+    ],
+    "termTag": "t:sorenlodzdordeaesir",
+    "prefixTag": "t:sorenlodzdordeaesir",
+    "indexTokens": [
+      "p:aes",
+      "p:aesi",
+      "p:aesir",
+      "p:dor",
+      "p:dord",
+      "p:dorde",
+      "p:lod",
+      "p:lodz",
+      "p:sor",
+      "p:sore",
+      "p:soren",
+      "t:aesir",
+      "t:dorde",
+      "t:lodz",
+      "t:soren",
+      "tv:1"
+    ],
+    "spellingCount": 1014
+  },
+  {
+    "input": "محمد الخطيب",
+    "normalized": "محمد الخطيب",
+    "terms": [
+      "محمد",
+      "الخطيب"
+    ],
+    "termTag": "t:محمدالخطيب",
+    "prefixTag": "p:محمدالخطيب",
+    "indexTokens": [
+      "p:الخ",
+      "p:الخط",
+      "p:الخطي",
+      "p:الخطيب",
+      "p:محم",
+      "p:محمد",
+      "t:الخطيب",
+      "t:محمد",
+      "tv:1"
+    ],
+    "spellingCount": 609
+  },
+  {
+    "input": "مُحَمَّد",
+    "normalized": "محمد",
+    "terms": [
+      "محمد"
+    ],
+    "termTag": "t:محمد",
+    "prefixTag": "p:محمد",
+    "indexTokens": [
+      "p:محم",
+      "p:محمد",
+      "t:محمد",
+      "tv:1"
+    ],
+    "spellingCount": 261
+  },
+  {
+    "input": "أحمد إسلام آمنة",
+    "normalized": "احمد اسلام امنه",
+    "terms": [
+      "احمد",
+      "اسلام",
+      "امنه"
+    ],
+    "termTag": "t:احمداسلامامنه",
+    "prefixTag": "t:احمداسلامامنه",
+    "indexTokens": [
+      "p:احم",
+      "p:احمد",
+      "p:اسل",
+      "p:اسلا",
+      "p:اسلام",
+      "p:امن",
+      "p:امنه",
+      "t:احمد",
+      "t:اسلام",
+      "t:امنه",
+      "tv:1"
+    ],
+    "spellingCount": 783
+  },
+  {
+    "input": "مدرسة مصطفى",
+    "normalized": "مدرسه مصطفي",
+    "terms": [
+      "مدرسه",
+      "مصطفي"
+    ],
+    "termTag": "t:مدرسهمصطفي",
+    "prefixTag": "p:مدرسهمصطفي",
+    "indexTokens": [
+      "p:مدر",
+      "p:مدرس",
+      "p:مدرسه",
+      "p:مصط",
+      "p:مصطف",
+      "p:مصطفي",
+      "t:مدرسه",
+      "t:مصطفي",
+      "tv:1"
+    ],
+    "spellingCount": 609
+  },
+  {
+    "input": "ΟΔΟΣ Αθηνών",
+    "normalized": "οδοσ αθηνων",
+    "terms": [
+      "οδοσ",
+      "αθηνων"
+    ],
+    "termTag": "t:οδοσαθηνων",
+    "prefixTag": "p:οδοσαθηνων",
+    "indexTokens": [
+      "p:αθη",
+      "p:αθην",
+      "p:αθηνω",
+      "p:αθηνων",
+      "p:οδο",
+      "p:οδοσ",
+      "t:αθηνων",
+      "t:οδοσ",
+      "tv:1"
+    ],
+    "spellingCount": 504
+  },
+  {
+    "input": "Москва Йошкар-Ола",
+    "normalized": "москва иошкар ола",
+    "terms": [
+      "москва",
+      "иошкар",
+      "ола"
+    ],
+    "termTag": "t:москваиошкарола",
+    "prefixTag": "t:москваиошкарола",
+    "indexTokens": [
+      "p:иош",
+      "p:иошк",
+      "p:иошка",
+      "p:иошкар",
+      "p:мос",
+      "p:моск",
+      "p:москв",
+      "p:москва",
+      "p:ола",
+      "t:иошкар",
+      "t:москва",
+      "t:ола",
+      "tv:1"
+    ],
+    "spellingCount": 1054
+  },
+  {
+    "input": "٢٠٢٤ ۱۴۰۳",
+    "normalized": "2024 1403",
+    "terms": [
+      "2024",
+      "1403"
+    ],
+    "termTag": "t:20241403",
+    "prefixTag": "p:20241403",
+    "indexTokens": [
+      "p:140",
+      "p:1403",
+      "p:202",
+      "p:2024",
+      "t:1403",
+      "t:2024",
+      "tv:1"
+    ],
+    "spellingCount": 458
+  },
+  {
+    "input": "東京タワー",
+    "normalized": "東京タワー",
+    "terms": [
+      "東京タワー"
+    ],
+    "termTag": "t:東京タワー",
+    "prefixTag": "p:東京タワー",
+    "indexTokens": [
+      "p:東京タ",
+      "p:東京タワ",
+      "p:東京タワー",
+      "t:東京タワー",
+      "tv:1"
+    ],
+    "spellingCount": 1
+  }
+]

@@ -1,0 +1,79 @@
+name: Publish
+
+# Runs on a version tag, a release, or by hand.
+on:
+  push:
+    tags: ['v*']
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # npm provenance and Trusted Publishing: the package trusts this
+      # repository and this workflow file, so publishing needs no secret.
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      # Trusted Publishing needs npm 11.5.1 or later.
+      - name: Use an npm that can publish without a token
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      # A published version cannot be taken back, so a mismatch stops here.
+      - name: Refuse a tag that does not match package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p 'require("./package.json").version')"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::tag $GITHUB_REF_NAME says $tag, package.json says $pkg"
+            exit 1
+          fi
+          echo "tag and package.json agree on $pkg"
+
+      # Provenance rejects a package whose repository.url is not this repository.
+      - name: Refuse a package.json that provenance will reject
+        run: |
+          url="$(node -p 'require("./package.json").repository?.url ?? ""')"
+          want="github.com/${GITHUB_REPOSITORY}"
+          case "$url" in
+            *"$want"*) echo "repository.url points at $want" ;;
+            "") echo "::error::package.json has no repository.url; provenance requires it to match $want"; exit 1 ;;
+            *)  echo "::error::package.json repository.url is $url, expected to contain $want"; exit 1 ;;
+          esac
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Refuse a version that is already published
+        run: |
+          v="$(node -p 'require("./package.json").version')"
+          if npm view "@pulseindex/sdk@$v" version >/dev/null 2>&1; then
+            echo "::error::@pulseindex/sdk@$v is already on the registry"
+            exit 1
+          fi
+          echo "$v is not published yet"
+
+      # No NODE_AUTH_TOKEN on purpose: an empty one would be tried instead of
+      # OIDC and fail with a 401.
+      - name: Publish
+        run: npm publish --access public --provenance

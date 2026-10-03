@@ -1,0 +1,72 @@
+{
+  "name": "@pulseindex/sdk",
+  "version": "8.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pulseindex/pulseindex-js.git"
+  },
+  "description": "Official Node.js & TypeScript SDK for PulseIndex: hosted search and filtering for large entity sets",
+  "license": "MIT",
+  "author": "PulseIndex",
+  "keywords": [
+    "pulseindex",
+    "sdk",
+    "grpc",
+    "search",
+    "indexing",
+    "typescript",
+    "nodejs"
+  ],
+  "homepage": "https://usepulseindex.com",
+  "bugs": {
+    "url": "https://usepulseindex.com/support"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./proto/engine.proto": "./proto/engine.proto",
+    "./proto/health.proto": "./proto/health.proto"
+  },
+  "files": [
+    "dist",
+    "proto",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "check:proto": "node scripts/check-proto.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm run test"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.12.6",
+    "@grpc/proto-loader": "^0.7.13"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.9"
+  }
+}

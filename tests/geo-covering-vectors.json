@@ -1,0 +1,92 @@
+[
+    {
+        "name": "istanbul",
+        "lat": 41.0082,
+        "lon": 28.9784,
+        "radiusKm": 0.5,
+        "precision": 6,
+        "count": 5,
+        "first": "sxk973",
+        "last": "sxk972"
+    },
+    {
+        "name": "istanbul",
+        "lat": 41.0082,
+        "lon": 28.9784,
+        "radiusKm": 2,
+        "precision": 6,
+        "count": 32,
+        "first": "sxk973",
+        "last": "sxk95n"
+    },
+    {
+        "name": "istanbul",
+        "lat": 41.0082,
+        "lon": 28.9784,
+        "radiusKm": 15,
+        "precision": 5,
+        "count": 54,
+        "first": "sxk97",
+        "last": "sxk3x"
+    },
+    {
+        "name": "london",
+        "lat": 51.5074,
+        "lon": -0.1278,
+        "radiusKm": 0.5,
+        "precision": 6,
+        "count": 7,
+        "first": "gcpvj0",
+        "last": "gcpvhc"
+    },
+    {
+        "name": "london",
+        "lat": 51.5074,
+        "lon": -0.1278,
+        "radiusKm": 2,
+        "precision": 6,
+        "count": 38,
+        "first": "gcpvj0",
+        "last": "gcpvh6"
+    },
+    {
+        "name": "london",
+        "lat": 51.5074,
+        "lon": -0.1278,
+        "radiusKm": 15,
+        "precision": 5,
+        "count": 62,
+        "first": "gcpvj",
+        "last": "gcpv2"
+    },
+    {
+        "name": "sydney",
+        "lat": -33.8688,
+        "lon": 151.2093,
+        "radiusKm": 0.5,
+        "precision": 6,
+        "count": 5,
+        "first": "r3gx2f",
+        "last": "r3gx2d"
+    },
+    {
+        "name": "sydney",
+        "lat": -33.8688,
+        "lon": 151.2093,
+        "radiusKm": 2,
+        "precision": 6,
+        "count": 31,
+        "first": "r3gx2f",
+        "last": "r3gx0x"
+    },
+    {
+        "name": "sydney",
+        "lat": -33.8688,
+        "lon": 151.2093,
+        "radiusKm": 15,
+        "precision": 5,
+        "count": 49,
+        "first": "r3gx2",
+        "last": "r3gwu"
+    }
+]
